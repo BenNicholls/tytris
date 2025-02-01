@@ -13,15 +13,15 @@ import (
 	"github.com/bennicholls/tyumi/vec"
 )
 
-var WellDims vec.Dims = vec.Dims{10, 22}
-var BlockSize int = 3
+var WellDims vec.Dims = vec.Dims{10, 25}
+var BlockSize int = 1
 var gravity int = 50
 
 func main() {
 	log.EnableConsoleOutput()
-	engine.InitConsole(32, 68)
+	engine.InitConsole(48, 27)
 	engine.SetPlatform(platform_sdl.New())
-	engine.SetupRenderer("res/glyphs.bmp", "res/font.bmp", "TyTris")
+	engine.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
 
 	game := new(TyTris)
 	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
@@ -46,7 +46,7 @@ type TyTris struct {
 
 func (t *TyTris) setupUI() {
 	t.playField = PlayField{}
-	t.playField.Init(WellDims.W*BlockSize, WellDims.H*BlockSize, vec.Coord{1, 1}, 0)
+	t.playField.Init(WellDims.W*BlockSize, WellDims.H*BlockSize, vec.Coord{19, 1}, 0)
 	t.playField.SetupBorder("pieces go here", "")
 
 	t.Window().AddChild(&t.playField)
@@ -54,6 +54,9 @@ func (t *TyTris) setupUI() {
 	t.SetInputHandler(t.handleInput)
 
 	t.matrix = make([]Line, WellDims.H)
+	for i := range t.matrix {
+		t.matrix[i].Clear()
+	}
 	t.playField.matrix = &t.matrix
 	t.playField.ghost_pos = &t.ghost_position
 	t.spawn_piece()
@@ -148,7 +151,7 @@ func (t *TyTris) testValidPosition(piece Piece) bool {
 	for i, block := range piece_shape.shape {
 		if block {
 			block_pos := piece.Bounds().Coord.Add(vec.IndexToCoord(i, piece_shape.stride))
-			if t.matrix[block_pos.Y].blocks[block_pos.X] != 0 {
+			if t.matrix[block_pos.Y].blocks[block_pos.X] != NO_PIECE {
 				return false
 			}
 		}
@@ -168,7 +171,7 @@ func (t *TyTris) lockPiece() {
 	for i, block := range piece_shape.shape {
 		if block {
 			block_pos := t.current_piece.pos.Add(vec.IndexToCoord(i, piece_shape.stride))
-			t.matrix[block_pos.Y].blocks[block_pos.X] = t.current_piece.Colour()
+			t.matrix[block_pos.Y].blocks[block_pos.X] = t.current_piece.pType
 		}
 	}
 
@@ -198,7 +201,7 @@ func (t *TyTris) destroyLine(line_index int) {
 		if t.matrix[i].hasBlock() {
 			t.matrix[i+1] = t.matrix[i]
 		} else {
-			t.matrix[i+1] = Line{}
+			t.matrix[i+1].Clear()
 			break
 		}
 	}
@@ -229,12 +232,18 @@ func (t *TyTris) spawn_piece() {
 }
 
 type Line struct {
-	blocks [10]uint32
+	blocks [10]PieceType
+}
+
+func (l *Line) Clear() {
+	for i := range l.blocks {
+		l.blocks[i] = NO_PIECE
+	}
 }
 
 func (l Line) isFull() bool {
 	for _, block := range l.blocks {
-		if block == 0 {
+		if block == NO_PIECE {
 			return false
 		}
 	}
@@ -243,7 +252,7 @@ func (l Line) isFull() bool {
 
 func (l Line) hasBlock() bool {
 	for _, block := range l.blocks {
-		if block != 0 {
+		if block != NO_PIECE {
 			return true
 		}
 	}

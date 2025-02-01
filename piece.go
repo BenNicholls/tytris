@@ -25,6 +25,7 @@ const (
 	T
 
 	MAX_PIECETYPE
+	NO_PIECE
 )
 
 var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
@@ -33,8 +34,9 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{true, true, true, true},
 			stride: 4,
 		},
-		colour:        col.CYAN,
-		max_rotations: 1,
+		colour:           col.MakeOpaque(0, 163, 217),
+		highlight_colour: col.MakeOpaque(102, 217, 255),
+		max_rotations:    1,
 	},
 
 	{ // J
@@ -42,8 +44,9 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{true, false, false, true, true, true},
 			stride: 3,
 		},
-		colour:        col.NAVY,
-		max_rotations: 3,
+		colour:           col.MakeOpaque(26, 0, 102),
+		highlight_colour: col.MakeOpaque(64, 0, 255),
+		max_rotations:    3,
 	},
 
 	{ // L
@@ -51,8 +54,9 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{false, false, true, true, true, true},
 			stride: 3,
 		},
-		colour:        col.ORANGE,
-		max_rotations: 3,
+		colour:           col.MakeOpaque(255, 128, 0),
+		highlight_colour: col.MakeOpaque(255, 178, 102),
+		max_rotations:    3,
 	},
 
 	{ // O
@@ -60,8 +64,9 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{true, true, true, true},
 			stride: 2,
 		},
-		colour:        col.YELLOW,
-		max_rotations: 0,
+		colour:           col.MakeOpaque(217, 217, 0),
+		highlight_colour: col.MakeOpaque(255, 255, 102),
+		max_rotations:    0,
 	},
 
 	{ // S
@@ -69,8 +74,9 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{false, true, true, true, true, false},
 			stride: 3,
 		},
-		colour:        col.GREEN,
-		max_rotations: 1,
+		colour:           col.MakeOpaque(0, 102, 0),
+		highlight_colour: col.MakeOpaque(0, 217, 0),
+		max_rotations:    1,
 	},
 
 	{ // Z
@@ -78,8 +84,9 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{true, true, false, false, true, true},
 			stride: 3,
 		},
-		colour:        col.RED,
-		max_rotations: 1,
+		colour:           col.MakeOpaque(178, 0, 45),
+		highlight_colour: col.MakeOpaque(255, 51, 102),
+		max_rotations:    1,
 	},
 
 	{ // T
@@ -87,37 +94,38 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 			shape:  []bool{false, true, false, true, true, true},
 			stride: 3,
 		},
-		colour:        col.FUSCHIA,
-		max_rotations: 3,
+		colour:           col.MakeOpaque(140, 0, 140),
+		highlight_colour: col.MakeOpaque(255, 51, 255),
+		max_rotations:    3,
 	},
 }
 
 type PieceData struct {
-	default_shape PieceShape
-	colour        uint32
-	max_rotations int
+	default_shape    PieceShape
+	colour           uint32
+	highlight_colour uint32
+	max_rotations    int
 }
 
 type Piece struct {
 	pType    PieceType
 	rotation int
 	pos      vec.Coord
-	ghost    bool
 }
 
 func (p Piece) Colour() uint32 {
-	if p.ghost {
-		return col.GREY
-	} else {
-		return pieceData[p.pType].colour
-	}
+	return pieceData[p.pType].colour
+}
+
+func (p Piece) Highlight() uint32 {
+	return pieceData[p.pType].highlight_colour
 }
 
 func (p Piece) Shape() PieceShape {
 	if p.rotation == 0 {
 		return pieceData[p.pType].default_shape
 	}
-	
+
 	def_shape := pieceData[p.pType].default_shape
 	rot_shape := PieceShape{}
 	rot_shape.shape = make([]bool, len(def_shape.shape))
@@ -152,9 +160,9 @@ func (p Piece) Shape() PieceShape {
 		}
 	case 2: //upside-down
 		for i, val := range slices.Backward[[]bool](def_shape.shape) {
-			rot_shape.shape[len(def_shape.shape) - 1 - i] = val
+			rot_shape.shape[len(def_shape.shape)-1-i] = val
 		}
-		rot_shape.stride = pieceData[p.pType].default_shape.stride	
+		rot_shape.stride = def_shape.stride
 	case 3:
 		if def_shape.stride == 2 {
 			rot_shape.stride = 3
@@ -187,7 +195,7 @@ func (p Piece) Dims() vec.Dims {
 }
 
 func (p *Piece) Rotate(dir int) {
-	p.rotation = util.CycleClamp(p.rotation + dir, 0, pieceData[p.pType].max_rotations)
+	p.rotation = util.CycleClamp(p.rotation+dir, 0, pieceData[p.pType].max_rotations)
 }
 
 type PieceShape struct {
