@@ -6,7 +6,6 @@ import (
 	"github.com/bennicholls/tyumi/engine"
 	"github.com/bennicholls/tyumi/engine/platform_sdl"
 	"github.com/bennicholls/tyumi/event"
-	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/input"
 	"github.com/bennicholls/tyumi/log"
 	"github.com/bennicholls/tyumi/util"
@@ -14,8 +13,8 @@ import (
 )
 
 var WellDims vec.Dims = vec.Dims{10, 25}
-var BlockSize int = 1
 var gravity int = 50
+var InvalidLines int = 3
 
 func main() {
 	log.EnableConsoleOutput()
@@ -25,7 +24,7 @@ func main() {
 
 	game := new(TyTris)
 	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
-	game.setupUI()
+	game.setup()
 	engine.SetInitialMainState(game)
 
 	engine.Run()
@@ -37,28 +36,22 @@ type TyTris struct {
 	engine.StatePrototype
 
 	playField PlayField
-	infoArea  ui.ElementPrototype
 
 	current_piece  Piece
 	ghost_position vec.Coord
 	matrix         []Line
 }
 
-func (t *TyTris) setupUI() {
-	t.playField = PlayField{}
-	t.playField.Init(WellDims.W*BlockSize, WellDims.H*BlockSize, vec.Coord{19, 1}, 0)
-	t.playField.SetupBorder("pieces go here", "")
-
-	t.Window().AddChild(&t.playField)
-
+func (t *TyTris) setup() {
 	t.SetInputHandler(t.handleInput)
 
 	t.matrix = make([]Line, WellDims.H)
 	for i := range t.matrix {
 		t.matrix[i].Clear()
 	}
-	t.playField.matrix = &t.matrix
-	t.playField.ghost_pos = &t.ghost_position
+
+	t.setupUI()
+
 	t.spawn_piece()
 }
 
@@ -74,7 +67,7 @@ func (t *TyTris) Update() {
 
 	//speed up!!!
 	if engine.GetTick()%300 == 0 { // every 5 seconds!
-		gravity = util.Clamp(gravity - 1, 10, 50)
+		gravity = util.Clamp(gravity-1, 10, 50)
 	}
 }
 
@@ -188,9 +181,12 @@ func (t *TyTris) lockPiece() {
 	}
 
 	//test for game over
-	if t.matrix[0].hasBlock() || t.matrix[1].hasBlock() {
-		log.Info("GAME OVER, YOU STINK LOSER!")
-		event.Fire(event.New(engine.EV_QUIT))
+	for i := range InvalidLines {
+		if t.matrix[i].hasBlock() {
+			log.Info("GAME OVER, YOU STINK LOSER!")
+			event.Fire(event.New(engine.EV_QUIT))
+			return
+		}
 	}
 
 	t.spawn_piece()
@@ -224,8 +220,13 @@ func (t *TyTris) spawn_piece() {
 	new_piecetype := PieceType(rand.Intn(int(MAX_PIECETYPE)))
 	t.current_piece = Piece{
 		pType: new_piecetype,
-		pos:   vec.Coord{3, 1},
+		pos:   vec.Coord{3, 0},
 	}
+
+	if new_piecetype == I {
+		t.current_piece.pos.Y = 1
+	}
+
 	t.updateGhost()
 	t.playField.current_piece = &t.current_piece
 	t.playField.Updated = true

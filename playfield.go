@@ -17,12 +17,14 @@ type PlayField struct {
 
 func (pf *PlayField) Render() {
 	pf.Clear()
+	
+	//draw background grid
+	drawGrid(&pf.Canvas, pf.Canvas.Bounds(), grid_colour)
 
-	//render checkerboard background
-	for cursor := range vec.EachCoord(pf.Canvas.Bounds()) {
-		if (cursor.X/BlockSize+cursor.Y/BlockSize)%2 == 0 {
-			pf.DrawColours(cursor, 0, col.Pair{col.NONE, col.LIGHTGREY})
-		}
+	//draw invalid line
+	invalid_brush := gfx.NewGlyphVisuals(gfx.GLYPH_LOWERCURSOR, col.Pair{invalid_line_colour, col.NONE})
+	for i := range 10 {
+		pf.DrawVisuals(vec.Coord{i, InvalidLines - 1}, 0, invalid_brush)
 	}
 
 	//render current piece and ghost
