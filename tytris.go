@@ -6,6 +6,7 @@ import (
 	"github.com/bennicholls/tyumi/engine"
 	"github.com/bennicholls/tyumi/engine/platform_sdl"
 	"github.com/bennicholls/tyumi/event"
+	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/input"
 	"github.com/bennicholls/tyumi/log"
 	"github.com/bennicholls/tyumi/util"
@@ -51,7 +52,6 @@ func (t *TyTris) setup() {
 	}
 
 	t.setupUI()
-
 	t.spawn_piece()
 }
 
@@ -108,7 +108,7 @@ func (t *TyTris) rotatePiece(dir int) {
 
 	t.current_piece.Rotate(dir)
 	t.updateGhost()
-	t.playField.Updated = true
+	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 }
 
 func (t *TyTris) testRotate(dir int) bool {
@@ -124,7 +124,7 @@ func (t *TyTris) movePiece(dir vec.Direction) {
 
 	t.current_piece.pos.Move(dir.X, dir.Y)
 	t.updateGhost()
-	t.playField.Updated = true
+	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 }
 
 func (t *TyTris) testMove(dir vec.Direction) bool {
@@ -214,6 +214,9 @@ func (t *TyTris) updateGhost() {
 			break
 		}
 	}
+
+	test_piece.pos = t.ghost_position
+	ui.GetLabelledElement[*PieceElement](t.Window(), "ghost").UpdatePiece(test_piece)
 }
 
 func (t *TyTris) spawn_piece() {
@@ -228,8 +231,7 @@ func (t *TyTris) spawn_piece() {
 	}
 
 	t.updateGhost()
-	t.playField.current_piece = &t.current_piece
-	t.playField.Updated = true
+	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 }
 
 type Line struct {
