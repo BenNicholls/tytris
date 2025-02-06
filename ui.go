@@ -43,17 +43,23 @@ func (t *TyTris) setupUI() {
 	t.Window().AddChild(&t.playField)
 }
 
-func drawGrid(canvas *gfx.Canvas, area vec.Rect, grid_colour uint32) {
-	//render checkerboard background
-	for cursor := range vec.EachCoord(area) {
-		if (cursor.X+cursor.Y)%2 == 0 {
-			canvas.DrawColours(cursor, 0, col.Pair{col.NONE, grid_colour})
-		} else {
-			canvas.DrawColours(cursor, 0, col.Pair{col.NONE, canvas.DefaultColours().Back})
-		}
 	}
 }
 
 func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph int, colour, highlight uint32) {
 	canvas.DrawVisuals(block_pos, 1, gfx.NewGlyphVisuals(glyph, col.Pair{highlight, colour}))
+}
+type GridArea struct {
+	ui.ElementPrototype
+}
+
+func (ga *GridArea) Render() {
+	//render checkerboard background
+	for cursor := range vec.EachCoord(ga.Canvas) {
+		if (cursor.X+cursor.Y)%2 == 0 {
+			ga.DrawColours(cursor, 0, col.Pair{col.NONE, grid_colour})
+		} else {
+			ga.DrawColours(cursor, 0, col.Pair{col.NONE, ga.DefaultColours().Back})
+		}
+	}
 }

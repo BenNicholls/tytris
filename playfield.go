@@ -3,19 +3,17 @@ package main
 import (
 	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
-	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/vec"
 )
 
 type PlayField struct {
-	ui.ElementPrototype
+	GridArea
 
 	matrix *[]Line
 }
 
 func (pf *PlayField) Render() {
-	//draw background grid
-	drawGrid(&pf.Canvas, pf.Canvas.Bounds(), grid_colour)
+	pf.GridArea.Render()
 
 	//draw invalid line
 	invalid_brush := gfx.NewGlyphVisuals(gfx.GLYPH_LOWERCURSOR, col.Pair{invalid_line_colour, col.NONE})
