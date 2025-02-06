@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"slices"
 
 	"github.com/bennicholls/tyumi/engine"
 	"github.com/bennicholls/tyumi/engine/platform_sdl"
@@ -36,11 +37,14 @@ func main() {
 type TyTris struct {
 	engine.StatePrototype
 
-	playField PlayField
+	playField    PlayField
+	upcomingArea UpcomingPieceView
+	heldArea     ui.ElementPrototype
 
 	current_piece  Piece
 	ghost_position vec.Coord
 	matrix         []Line
+	upcoming_pieces []Piece
 }
 
 func (t *TyTris) setup() {
@@ -52,6 +56,7 @@ func (t *TyTris) setup() {
 	}
 
 	t.setupUI()
+	t.shuffle_pieces()
 	t.spawn_piece()
 }
 
@@ -219,19 +224,36 @@ func (t *TyTris) updateGhost() {
 	ui.GetLabelledElement[*PieceElement](t.Window(), "ghost").UpdatePiece(test_piece)
 }
 
-func (t *TyTris) spawn_piece() {
-	new_piecetype := PieceType(rand.Intn(int(MAX_PIECETYPE)))
-	t.current_piece = Piece{
-		pType: new_piecetype,
-		pos:   vec.Coord{3, 0},
-	}
+//adds a shuffled set of the 7 pieces to the upcoming piece list
+func (t *TyTris) shuffle_pieces() {
+	pieces := []PieceType{I, J, Z, S, T, O, L}
+	rand.Shuffle(len(pieces), func(i, j int) {
+		pieces[i], pieces[j] = pieces[j], pieces[i]
+	})
 
-	if new_piecetype == I {
+	for i := range pieces {
+		t.upcoming_pieces = append(t.upcoming_pieces, Piece{
+			pType: pieces[i],
+			pos: vec.Coord{3,0},
+		})
+	}
+}
+
+func (t *TyTris) spawn_piece() {
+	t.current_piece = t.upcoming_pieces[0]
+	
+	if t.current_piece.pType == I {
 		t.current_piece.pos.Y = 1
 	}
 
 	t.updateGhost()
 	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+
+	t.upcoming_pieces = slices.Delete(t.upcoming_pieces, 0, 1)
+	if len(t.upcoming_pieces) < 6 {
+		t.shuffle_pieces()
+	}
+	t.upcomingArea.UpdatePieces(t.upcoming_pieces[0:6])
 }
 
 type Line struct {

@@ -16,7 +16,7 @@ var invalid_line_colour uint32 = col.MakeOpaque(51, 51, 51)
 func (t *TyTris) setupUI() {
 	//define a custon border style (derived from one of the provided borderstyles) and set it as the default for all
 	//borders
-	tytris_border := ui.BorderStyles["Thick"]
+	tytris_border := ui.BorderStyles["Thin"]
 	tytris_border.Colours = col.Pair{border_colour, background_colour}
 	ui.SetDefaultBorderStyle(tytris_border)
 
@@ -41,14 +41,42 @@ func (t *TyTris) setupUI() {
 	t.playField.AddChild(&ghost_piece)
 
 	t.Window().AddChild(&t.playField)
-}
 
+	t.upcomingArea.Init(18, 4, vec.Coord{30, 2}, 0)
+	t.upcomingArea.SetDefaultColours(col.Pair{col.LIME, background_colour})
+	t.upcomingArea.SetupBorder("Upcoming Pieces", "")
+	for range 6 {
+		upcoming_piece := PieceElement{}
+		upcoming_piece.Init(3, 2, vec.Coord{0,0}, 1)
+		t.upcomingArea.AddChild(&upcoming_piece)
 	}
+
+	t.Window().AddChild(&t.upcomingArea)
 }
 
 func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph int, colour, highlight uint32) {
 	canvas.DrawVisuals(block_pos, 1, gfx.NewGlyphVisuals(glyph, col.Pair{highlight, colour}))
 }
+
+type UpcomingPieceView struct {
+	GridArea
+
+	pieces []Piece
+}
+
+func (upv *UpcomingPieceView) UpdatePieces(pieces []Piece) {
+	piece_elements := upv.GetChildren()
+	for i, piece := range pieces {
+		piece_elements[i].(*PieceElement).UpdatePiece(piece)
+	}
+
+	x := 1
+	for i := range piece_elements {
+		piece_elements[i].MoveTo(vec.Coord{x, 1})
+		x += piece_elements[i].Bounds().Dims.W + 1
+	}
+}
+
 type GridArea struct {
 	ui.ElementPrototype
 }
