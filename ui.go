@@ -14,17 +14,15 @@ var grid_colour uint32 = col.MakeOpaque(26, 26, 26)
 var invalid_line_colour uint32 = col.MakeOpaque(51, 51, 51)
 
 func (t *TyTris) setupUI() {
-	//define a custon border style (derived from one of the provided borderstyles) and set it as the default for all
+	//define a custom border style (derived from one of the provided borderstyles) and set it as the default for all
 	//borders
 	tytris_border := ui.BorderStyles["Thin"]
 	tytris_border.Colours = col.Pair{border_colour, background_colour}
 	ui.SetDefaultBorderStyle(tytris_border)
-
-	t.Window().SetDefaultColours(col.Pair{border_colour, background_colour})
+	
 
 	//initialize the playfield, where the blocks fall and the matrix is drawn.
 	t.playField.Init(WellDims.W, WellDims.H, vec.Coord{19, 1}, 0)
-	t.playField.SetDefaultColours(col.Pair{col.LIME, background_colour})
 	t.playField.EnableBorder()
 	t.playField.matrix = &t.matrix
 
@@ -42,8 +40,7 @@ func (t *TyTris) setupUI() {
 
 	t.Window().AddChild(&t.playField)
 
-	t.upcomingArea.Init(18, 4, vec.Coord{30, 2}, 0)
-	t.upcomingArea.SetDefaultColours(col.Pair{col.LIME, background_colour})
+	t.upcomingArea.Init(18, 4, vec.Coord{30, 3}, 0)
 	t.upcomingArea.SetupBorder("Upcoming Pieces", "")
 	for range 6 {
 		upcoming_piece := PieceElement{}
@@ -60,8 +57,6 @@ func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph int, colour, highl
 
 type UpcomingPieceView struct {
 	GridArea
-
-	pieces []Piece
 }
 
 func (upv *UpcomingPieceView) UpdatePieces(pieces []Piece) {

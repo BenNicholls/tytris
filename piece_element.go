@@ -14,6 +14,16 @@ type PieceElement struct {
 	ghost bool
 }
 
+func (pe *PieceElement) Init(w, h int, pos vec.Coord, depth int) {
+	pe.ElementPrototype.Init(w, h, pos, depth)
+	pe.SetDefaultVisuals(gfx.Visuals{
+		Mode:    gfx.DRAW_NONE,
+		Colours: col.Pair{col.LIME, col.FUSCHIA},
+	})
+	
+	pe.piece.pType = NO_PIECE
+}
+
 func (pe *PieceElement) UpdatePiece(p Piece) {
 	if p.pType == NO_PIECE {
 		pe.SetVisible(false)
@@ -55,8 +65,6 @@ func (pe *PieceElement) Render() {
 				}
 				drawBlock(&pe.Canvas, offset, glyph, pe.piece.Colour(), pe.piece.Highlight())
 			}
-		} else {
-			pe.DrawNone(offset)
 		}
 	}
 }

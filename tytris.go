@@ -7,6 +7,8 @@ import (
 	"github.com/bennicholls/tyumi/engine"
 	"github.com/bennicholls/tyumi/engine/platform_sdl"
 	"github.com/bennicholls/tyumi/event"
+	"github.com/bennicholls/tyumi/gfx"
+	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/input"
 	"github.com/bennicholls/tyumi/log"
@@ -23,6 +25,11 @@ func main() {
 	engine.InitConsole(48, 27)
 	engine.SetPlatform(platform_sdl.New())
 	engine.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
+
+	ui.SetDefaultElementVisuals(gfx.Visuals{
+		Mode:    gfx.DRAW_GLYPH,
+		Colours: col.Pair{border_colour, background_colour},
+	})
 
 	game := new(TyTris)
 	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
@@ -41,9 +48,9 @@ type TyTris struct {
 	upcomingArea UpcomingPieceView
 	heldArea     ui.ElementPrototype
 
-	current_piece  Piece
-	ghost_position vec.Coord
-	matrix         []Line
+	current_piece   Piece
+	ghost_position  vec.Coord
+	matrix          []Line
 	upcoming_pieces []Piece
 }
 
@@ -224,7 +231,7 @@ func (t *TyTris) updateGhost() {
 	ui.GetLabelledElement[*PieceElement](t.Window(), "ghost").UpdatePiece(test_piece)
 }
 
-//adds a shuffled set of the 7 pieces to the upcoming piece list
+// adds a shuffled set of the 7 pieces to the upcoming piece list
 func (t *TyTris) shuffle_pieces() {
 	pieces := []PieceType{I, J, Z, S, T, O, L}
 	rand.Shuffle(len(pieces), func(i, j int) {
@@ -234,14 +241,14 @@ func (t *TyTris) shuffle_pieces() {
 	for i := range pieces {
 		t.upcoming_pieces = append(t.upcoming_pieces, Piece{
 			pType: pieces[i],
-			pos: vec.Coord{3,0},
+			pos:   vec.Coord{3, 0},
 		})
 	}
 }
 
 func (t *TyTris) spawn_piece() {
 	t.current_piece = t.upcoming_pieces[0]
-	
+
 	if t.current_piece.pType == I {
 		t.current_piece.pos.Y = 1
 	}
