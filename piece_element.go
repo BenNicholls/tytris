@@ -22,9 +22,8 @@ func (pe *PieceElement) UpdatePiece(p Piece) {
 		pe.SetVisible(true)
 	}
 
-	if pe.piece.Dims() != p.Dims() {
+	if pe.piece.pType == NO_PIECE || pe.piece.Dims() != p.Dims() {
 		pe.Resize(p.Dims())
-		pe.Updated = true
 	} else if pe.piece.pType != p.pType {
 		pe.Clear()
 		pe.Updated = true
@@ -38,6 +37,10 @@ func (pe *PieceElement) UpdatePiece(p Piece) {
 }
 
 func (pe *PieceElement) Render() {
+	if pe.piece.pType == NO_PIECE {
+		return
+	}
+
 	shape := pe.piece.Shape()
 	stride := shape.stride
 	for i, piece_block := range shape.shape {

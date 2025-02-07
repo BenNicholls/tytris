@@ -26,7 +26,7 @@ func (pf *PlayField) Render() {
 		for x, block := range line.blocks {
 			if block != NO_PIECE {
 				glyph := gfx.GLYPH_NONE
-				if (*pf.matrix)[y-1].blocks[x] == NO_PIECE {
+				if y != 0 && (*pf.matrix)[y-1].blocks[x] == NO_PIECE {
 					glyph = gfx.GLYPH_HALFBLOCK_UP
 				}
 				drawBlock(&pf.Canvas, vec.Coord{x, y}, glyph, pieceData[block].colour, pieceData[block].highlight_colour)
