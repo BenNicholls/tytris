@@ -48,7 +48,15 @@ func (t *TyTris) setupUI() {
 		t.upcomingArea.AddChild(&upcoming_piece)
 	}
 
-	t.Window().AddChild(&t.upcomingArea)
+	t.heldArea.Init(6, 4, vec.Coord{30, 8}, 0)
+	t.heldArea.SetupBorder("", "held piece")
+	
+	held_piece := PieceElement{}
+	held_piece.Init(3,2, vec.Coord{1,1}, 1)
+	held_piece.SetLabel("held")
+	t.heldArea.AddChild(&held_piece)
+	
+	t.Window().AddChildren(&t.upcomingArea, &t.heldArea)
 }
 
 func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph int, colour, highlight uint32) {

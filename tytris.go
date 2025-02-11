@@ -48,15 +48,17 @@ type TyTris struct {
 
 	playField    PlayField
 	upcomingArea UpcomingPieceView
-	heldArea     ui.ElementPrototype
+	heldArea     GridArea
 
 	current_piece   Piece
+	held_piece      Piece
 	ghost_position  vec.Coord
 	matrix          []Line
 	upcoming_pieces []Piece
 
 	last_piece_drop_tick int
 	gravity              int
+	swapped_piece        bool // whether or not a swap has taken place for this piece
 }
 
 func (t *TyTris) setup() {
@@ -70,7 +72,8 @@ func (t *TyTris) setup() {
 	t.setupUI()
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
-	t.spawn_piece()
+	t.held_piece = Piece{pType: NO_PIECE}
+	t.spawn_piece(t.get_next_piece())
 }
 
 func (t *TyTris) Update() {
@@ -108,6 +111,8 @@ func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 		case input.K_c:
 			t.rotatePiece(CW)
 			event_handled = true
+		case input.K_x:
+			t.swap_held_piece()
 		}
 	}
 
@@ -203,7 +208,8 @@ func (t *TyTris) lockPiece() {
 	}
 
 	t.last_piece_drop_tick = engine.GetTick()
-	t.spawn_piece()
+	t.swapped_piece = false
+	t.spawn_piece(t.get_next_piece())
 }
 
 func (t *TyTris) destroyLine(line_index int) {
@@ -243,13 +249,13 @@ func (t *TyTris) shuffle_pieces() {
 	for i := range pieces {
 		t.upcoming_pieces = append(t.upcoming_pieces, Piece{
 			pType: pieces[i],
-			pos:   vec.Coord{3, 0},
 		})
 	}
 }
 
-func (t *TyTris) spawn_piece() {
-	t.current_piece = t.upcoming_pieces[0]
+func (t *TyTris) spawn_piece(piece Piece) {
+	t.current_piece = piece
+	t.current_piece.pos = vec.Coord{3, 0}
 
 	if t.current_piece.pType == I {
 		t.current_piece.pos.Y = 1
@@ -258,14 +264,46 @@ func (t *TyTris) spawn_piece() {
 	t.updateGhost()
 	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 
+	//update gravity if necessary
+	t.gravity = util.Clamp(starting_gravity-engine.GetTick()/acceleration_time, gravity_minimum, starting_gravity)
+}
+
+func (t *TyTris) get_next_piece() Piece {
+	piece := t.upcoming_pieces[0]
 	t.upcoming_pieces = slices.Delete(t.upcoming_pieces, 0, 1)
 	if len(t.upcoming_pieces) < 6 {
 		t.shuffle_pieces()
 	}
 	t.upcomingArea.UpdatePieces(t.upcoming_pieces[0:6])
 
-	//update gravity if necessary
-	t.gravity = util.Clamp(starting_gravity-engine.GetTick()/acceleration_time, gravity_minimum, starting_gravity)
+	return piece
+}
+
+func (t *TyTris) swap_held_piece() {
+	if t.held_piece.pType == t.current_piece.pType {
+		return
+	}
+
+	if t.swapped_piece {
+		return
+	}
+
+	if t.held_piece.pType == NO_PIECE {
+		t.held_piece = Piece{pType: t.current_piece.pType}
+		t.spawn_piece(t.get_next_piece())
+	} else {
+		held := t.held_piece
+		t.held_piece = Piece{pType: t.current_piece.pType}
+		t.spawn_piece(held)
+	}
+
+	ui.GetLabelledElement[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
+	colour := t.held_piece.Colour()
+	flash := gfx.NewFlashAnimation(t.heldArea.DrawableArea(), 0, col.Pair{colour, colour}, 15)
+	flash.OneShot = true
+	t.heldArea.AddAnimation(flash)
+	flash.Play()
+	t.swapped_piece = true
 }
 
 type Line struct {

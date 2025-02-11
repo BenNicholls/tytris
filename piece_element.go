@@ -34,9 +34,11 @@ func (pe *PieceElement) UpdatePiece(p Piece) {
 
 	if pe.piece.pType == NO_PIECE || pe.piece.Dims() != p.Dims() {
 		pe.Resize(p.Dims())
+		pe.Updated = true
 	} else if pe.piece.pType != p.pType {
 		pe.Clear()
 		pe.Updated = true
+		pe.GetParent().ForceRedraw()
 	}
 
 	if pe.piece.pos != p.pos {
