@@ -31,10 +31,10 @@ func main() {
 		Colours: col.Pair{border_colour, background_colour},
 	})
 
-	game := new(TyTris)
+	game := TyTris{}
 	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
 	game.setup()
-	engine.SetInitialMainState(game)
+	engine.SetInitialMainState(&game)
 
 	engine.Run()
 

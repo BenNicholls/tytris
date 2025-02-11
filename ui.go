@@ -68,7 +68,7 @@ func (upv *UpcomingPieceView) UpdatePieces(pieces []Piece) {
 	x := 1
 	for i := range piece_elements {
 		piece_elements[i].MoveTo(vec.Coord{x, 1})
-		x += piece_elements[i].Bounds().Dims.W + 1
+		x += piece_elements[i].Size().W + 1
 	}
 }
 
@@ -78,7 +78,7 @@ type GridArea struct {
 
 func (ga *GridArea) Render() {
 	//render checkerboard background
-	for cursor := range vec.EachCoord(ga.Canvas) {
+	for cursor := range vec.EachCoordInArea(ga.Canvas) {
 		if (cursor.X+cursor.Y)%2 == 0 {
 			ga.DrawColours(cursor, 0, col.Pair{col.NONE, grid_colour})
 		} else {
