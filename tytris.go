@@ -18,6 +18,7 @@ import (
 
 var WellDims vec.Dims = vec.Dims{10, 25}
 var starting_gravity int = 45
+var speed_up_gravity int = 8    //gravity for when the player is holding DOWN
 var acceleration_time int = 300 //speed up every 300 ticks (5 seconds)
 var gravity_minimum int = 5
 var InvalidLines int = 3
@@ -32,6 +33,8 @@ func main() {
 		Mode:    gfx.DRAW_GLYPH,
 		Colours: col.Pair{border_colour, background_colour},
 	})
+
+	input.SuppressKeyRepeats()
 
 	game := TyTris{}
 	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
@@ -58,7 +61,9 @@ type TyTris struct {
 
 	last_piece_drop_tick int
 	gravity              int
+	speed_up             bool // will be true if player is holding down the DOWN key
 	swapped_piece        bool // whether or not a swap has taken place for this piece
+
 }
 
 func (t *TyTris) setup() {
@@ -78,7 +83,12 @@ func (t *TyTris) setup() {
 
 func (t *TyTris) Update() {
 	//apply gravity
-	if (engine.GetTick()-t.last_piece_drop_tick)%t.gravity == 0 {
+	current_gravity := t.gravity
+	if t.speed_up && t.gravity > speed_up_gravity {
+		current_gravity = speed_up_gravity
+	}
+
+	if (engine.GetTick()-t.last_piece_drop_tick)%current_gravity == 0 {
 		if t.testMove(vec.DIR_DOWN) {
 			t.movePiece(vec.DIR_DOWN)
 		} else {
@@ -90,29 +100,41 @@ func (t *TyTris) Update() {
 func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 	if event.ID() == input.EV_KEYBOARD {
 		key_event := event.(*input.KeyboardEvent)
-		if dir := key_event.Direction(); dir != vec.DIR_NONE {
-			switch dir {
+
+		switch key_event.PressType {
+		case input.KEY_PRESSED:
+			switch key_event.Direction() {
 			case vec.DIR_LEFT:
 				t.movePiece(vec.DIR_LEFT)
 				event_handled = true
 			case vec.DIR_RIGHT:
 				t.movePiece(vec.DIR_RIGHT)
 				event_handled = true
-			case vec.DIR_DOWN:
+			case vec.DIR_UP:
 				t.dropPiece()
 				event_handled = true
+			case vec.DIR_DOWN:
+				t.speed_up = true
+				event_handled = true
 			}
-		}
 
-		switch key_event.Key {
-		case input.K_z:
-			t.rotatePiece(CCW)
-			event_handled = true
-		case input.K_c:
-			t.rotatePiece(CW)
-			event_handled = true
-		case input.K_x:
-			t.swap_held_piece()
+			switch key_event.Key {
+			case input.K_z:
+				t.rotatePiece(CCW)
+				event_handled = true
+			case input.K_c:
+				t.rotatePiece(CW)
+				event_handled = true
+			case input.K_x:
+				t.swap_held_piece()
+				event_handled = true
+			}
+
+		case input.KEY_RELEASED:
+			if key_event.Direction() == vec.DIR_DOWN {
+				t.speed_up = false
+				event_handled = true
+			}
 		}
 	}
 
@@ -301,7 +323,7 @@ func (t *TyTris) swap_held_piece() {
 
 	ui.GetLabelledElement[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
 	colour := t.held_piece.Colour()
-	
+
 	flash := gfx.NewFlashAnimation(t.heldArea.DrawableArea(), 0, col.Pair{colour, colour}, 15)
 	flash.OneShot = true
 	flash.Play()

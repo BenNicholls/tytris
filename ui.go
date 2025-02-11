@@ -10,6 +10,7 @@ import (
 // colours!
 var background_colour uint32 = col.MakeOpaque(26, 20, 13)
 var border_colour uint32 = col.MakeOpaque(77, 61, 38)
+var text_colour uint32 = col.MakeOpaque(158, 134, 100)
 var grid_colour uint32 = col.MakeOpaque(26, 26, 26)
 var invalid_line_colour uint32 = col.MakeOpaque(51, 51, 51)
 
@@ -19,10 +20,13 @@ func (t *TyTris) setupUI() {
 	tytris_border := ui.BorderStyles["Thin"]
 	tytris_border.Colours = col.Pair{border_colour, background_colour}
 	ui.SetDefaultBorderStyle(tytris_border)
-	
+
 	logoImage := ui.Image{}
-	logoImage.Init(12, 6, vec.Coord{3,1}, 0, "res/logo.xp")
-	t.Window().AddChild(&logoImage)
+	logoImage.Init(12, 6, vec.Coord{3, 1}, 0, "res/logo.xp")
+	subtitle := ui.NewTextbox(11, ui.FIT_TEXT, vec.Coord{4, 8}, 0, "The Fun Game That No One Stole At All!", true)
+	subtitle.SetDefaultColours(col.Pair{text_colour, gfx.COL_DEFAULT})
+
+	t.Window().AddChildren(&logoImage, subtitle)
 
 	//initialize the playfield, where the blocks fall and the matrix is drawn.
 	t.playField.Init(WellDims.W, WellDims.H, vec.Coord{19, 1}, 0)
@@ -47,18 +51,18 @@ func (t *TyTris) setupUI() {
 	t.upcomingArea.SetupBorder("Upcoming Pieces", "")
 	for range 6 {
 		upcoming_piece := PieceElement{}
-		upcoming_piece.Init(3, 2, vec.Coord{0,0}, 1)
+		upcoming_piece.Init(3, 2, vec.Coord{0, 0}, 1)
 		t.upcomingArea.AddChild(&upcoming_piece)
 	}
 
 	t.heldArea.Init(6, 4, vec.Coord{30, 8}, 0)
 	t.heldArea.SetupBorder("", "held piece")
-	
+
 	held_piece := PieceElement{}
-	held_piece.Init(3,2, vec.Coord{1,1}, 1)
+	held_piece.Init(3, 2, vec.Coord{1, 1}, 1)
 	held_piece.SetLabel("held")
 	t.heldArea.AddChild(&held_piece)
-	
+
 	t.Window().AddChildren(&t.upcomingArea, &t.heldArea)
 }
 
