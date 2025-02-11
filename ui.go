@@ -20,6 +20,9 @@ func (t *TyTris) setupUI() {
 	tytris_border.Colours = col.Pair{border_colour, background_colour}
 	ui.SetDefaultBorderStyle(tytris_border)
 	
+	logoImage := ui.Image{}
+	logoImage.Init(12, 6, vec.Coord{3,1}, 0, "res/logo.xp")
+	t.Window().AddChild(&logoImage)
 
 	//initialize the playfield, where the blocks fall and the matrix is drawn.
 	t.playField.Init(WellDims.W, WellDims.H, vec.Coord{19, 1}, 0)

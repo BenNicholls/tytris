@@ -1,0 +1,6 @@
+github.com/bennicholls/tyumi v0.0.0-20250210235211-898251613853 h1:uvyWKIixlnaJzWB+0m54iJbXaU/zlAC9rqguKXvUQ/Y=
+github.com/bennicholls/tyumi v0.0.0-20250210235211-898251613853/go.mod h1:Uyui23OLTNdQ7dh2NukgrIspgYFcR4EnKVD3zsCoGAo=
+github.com/veandco/go-sdl2 v0.4.40 h1:fZv6wC3zz1Xt167P09gazawnpa0KY5LM7JAvKpX9d/U=
+github.com/veandco/go-sdl2 v0.4.40/go.mod h1:OROqMhHD43nT4/i9crJukyVecjPNYYuCofep6SNiAjY=
+golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f h1:XdNn9LlyWAhLVp6P/i8QYBW+hlyhrhei9uErw2B5GJo=
+golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f/go.mod h1:D5SMRVC3C2/4+F/DB1wZsLRnSNimn2Sp/NPsCrsv8ak=

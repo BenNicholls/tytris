@@ -297,13 +297,15 @@ func (t *TyTris) swap_held_piece() {
 		t.spawn_piece(held)
 	}
 
+	t.swapped_piece = true
+
 	ui.GetLabelledElement[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
 	colour := t.held_piece.Colour()
+	
 	flash := gfx.NewFlashAnimation(t.heldArea.DrawableArea(), 0, col.Pair{colour, colour}, 15)
 	flash.OneShot = true
-	t.heldArea.AddAnimation(flash)
 	flash.Play()
-	t.swapped_piece = true
+	t.heldArea.AddAnimation(flash)
 }
 
 type Line struct {
