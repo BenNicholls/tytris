@@ -17,7 +17,9 @@ import (
 )
 
 var WellDims vec.Dims = vec.Dims{10, 25}
-var gravity int = 50
+var starting_gravity int = 45
+var acceleration_time int = 300 //speed up every 300 ticks (5 seconds)
+var gravity_minimum int = 5
 var InvalidLines int = 3
 
 func main() {
@@ -52,6 +54,9 @@ type TyTris struct {
 	ghost_position  vec.Coord
 	matrix          []Line
 	upcoming_pieces []Piece
+
+	last_piece_drop_tick int
+	gravity              int
 }
 
 func (t *TyTris) setup() {
@@ -64,22 +69,18 @@ func (t *TyTris) setup() {
 
 	t.setupUI()
 	t.shuffle_pieces()
+	t.gravity = starting_gravity
 	t.spawn_piece()
 }
 
 func (t *TyTris) Update() {
 	//apply gravity
-	if engine.GetTick()%gravity == 0 {
+	if (engine.GetTick()-t.last_piece_drop_tick)%t.gravity == 0 {
 		if t.testMove(vec.DIR_DOWN) {
 			t.movePiece(vec.DIR_DOWN)
 		} else {
 			t.lockPiece()
 		}
-	}
-
-	//speed up!!!
-	if engine.GetTick()%300 == 0 { // every 5 seconds!
-		gravity = util.Clamp(gravity-1, 10, 50)
 	}
 }
 
@@ -201,6 +202,7 @@ func (t *TyTris) lockPiece() {
 		}
 	}
 
+	t.last_piece_drop_tick = engine.GetTick()
 	t.spawn_piece()
 }
 
@@ -261,6 +263,9 @@ func (t *TyTris) spawn_piece() {
 		t.shuffle_pieces()
 	}
 	t.upcomingArea.UpdatePieces(t.upcoming_pieces[0:6])
+
+	//update gravity if necessary
+	t.gravity = util.Clamp(starting_gravity-engine.GetTick()/acceleration_time, gravity_minimum, starting_gravity)
 }
 
 type Line struct {
