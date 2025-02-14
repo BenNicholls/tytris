@@ -65,6 +65,7 @@ type TyTris struct {
 
 	last_piece_drop_tick int
 	gravity              int
+	gameTick             int  // ticks since game was started
 	speed_up             bool // will be true if player is holding down the DOWN key
 	swapped_piece        bool // whether or not a swap has taken place for this piece
 
@@ -74,11 +75,16 @@ func (t *TyTris) setup() {
 	t.SetInputHandler(t.handleInput)
 
 	t.matrix = make([]Line, WellDims.H)
+	t.setupUI()
+	t.new_game()
+}
+
+func (t *TyTris) new_game() {
 	for i := range t.matrix {
 		t.matrix[i].Clear()
 	}
 
-	t.setupUI()
+	t.gameTick = 0
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
 	t.held_piece = Piece{pType: NO_PIECE}
@@ -92,13 +98,15 @@ func (t *TyTris) Update() {
 		current_gravity = speed_up_gravity
 	}
 
-	if (engine.GetTick()-t.last_piece_drop_tick)%current_gravity == 0 {
+	if (t.gameTick-t.last_piece_drop_tick)%current_gravity == 0 {
 		if t.testMove(vec.DIR_DOWN) {
 			t.movePiece(vec.DIR_DOWN)
 		} else {
 			t.lockPiece()
 		}
 	}
+
+	t.gameTick += 1
 }
 
 func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
@@ -248,7 +256,7 @@ func (t *TyTris) lockPiece() {
 		}
 	}
 
-	t.last_piece_drop_tick = engine.GetTick()
+	t.last_piece_drop_tick = t.gameTick
 	t.swapped_piece = false
 	t.spawn_piece(t.get_next_piece())
 }
@@ -303,7 +311,7 @@ func (t *TyTris) spawn_piece(piece Piece) {
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 
 	//update gravity if necessary
-	t.gravity = util.Clamp(starting_gravity-engine.GetTick()/acceleration_time, gravity_minimum, starting_gravity)
+	t.gravity = util.Clamp(starting_gravity-t.gameTick/acceleration_time, gravity_minimum, starting_gravity)
 }
 
 func (t *TyTris) get_next_piece() Piece {
@@ -341,11 +349,10 @@ func (t *TyTris) swap_held_piece() {
 	held_element := ui.GetLabelled[*PieceElement](t.Window(), "held")
 	held_element.UpdatePiece(t.held_piece)
 	if t.held_piece.pType == O {
-		held_element.MoveTo(vec.Coord{2,1})
+		held_element.MoveTo(vec.Coord{2, 1})
 	} else {
-		held_element.MoveTo(vec.Coord{1,1})
+		held_element.MoveTo(vec.Coord{1, 1})
 	}
-
 
 	colour := t.held_piece.Colour()
 	t.held_flash.Colours = col.Pair{colour, colour}
