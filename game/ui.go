@@ -78,7 +78,11 @@ func (t *TyTris) setupUI() {
 
 	scoreLabel := ui.NewTextbox(14, 1, vec.Coord{0, 0}, 1, "S C O R E", true)
 	scoreLabel.SetDefaultColours(col.Pair{text_colour, col.NONE})
-	infoArea.AddChild(scoreLabel)
+	score := ui.NewTextbox(14, 1, vec.Coord{0, 1}, 1, "0", true)
+	score.SetLabel("score")
+	score.SetDefaultColours(col.Pair{text_colour, col.NONE})
+	infoArea.AddChildren(scoreLabel, score)
+
 
 	t.Window().AddChild(&infoArea)
 

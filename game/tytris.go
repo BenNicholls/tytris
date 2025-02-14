@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	"slices"
+	"strconv"
 
 	"github.com/bennicholls/tyumi/engine"
 	"github.com/bennicholls/tyumi/engine/platform_sdl"
@@ -86,6 +87,8 @@ func (t *TyTris) new_game() {
 	}
 
 	t.gameTick = 0
+	t.score = 0
+	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText("0")
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
 	t.held_piece = Piece{pType: NO_PIECE}
@@ -108,6 +111,14 @@ func (t *TyTris) Update() {
 	}
 
 	t.gameTick += 1
+}
+
+func (t *TyTris) updateScore(lines_destroyed int) {
+	points := lines_destroyed*10
+	//do more score stuff here????
+
+	t.score += points
+	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText(strconv.Itoa(t.score))
 }
 
 func (t *TyTris) testRotate(dir int) (kick vec.Coord, ok bool) {
@@ -168,13 +179,17 @@ func (t *TyTris) lockPiece() {
 	t.playField.Updated = true
 
 	//test for full lines
+	var destroyed_lines int
 	for i, line := range t.matrix {
 		if line.isFull() {
 			t.destroyLine(i)
-			//hand out points
+			destroyed_lines += 1
 			//i dunno, do some animations or something??
-			log.Info("Nice job!")
 		}
+	}
+
+	if destroyed_lines > 0 {
+		t.updateScore(destroyed_lines)
 	}
 
 	//test for game over
