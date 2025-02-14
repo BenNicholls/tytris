@@ -71,6 +71,22 @@ func (t *TyTris) setupUI() {
 	t.heldArea.AddChild(&held_piece)
 
 	t.Window().AddChildren(&t.upcomingArea, &t.heldArea)
+
+	infoArea := ui.ElementPrototype{}
+	infoArea.Init(14, 6, vec.Coord{32, 19}, 1)
+	infoArea.EnableBorder()
+
+	scoreLabel := ui.NewTextbox(14, 1, vec.Coord{0, 0}, 1, "S C O R E", true)
+	scoreLabel.SetDefaultColours(col.Pair{text_colour, col.NONE})
+	infoArea.AddChild(scoreLabel)
+
+	t.Window().AddChild(&infoArea)
+
+	highScoreArea := ui.ElementPrototype{}
+	highScoreArea.Init(12,13,vec.Coord{3,13}, 1)
+	highScoreArea.EnableBorder()
+
+	t.Window().AddChild(&highScoreArea)
 }
 
 func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph gfx.Glyph, colour, highlight uint32) {
