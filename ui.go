@@ -57,6 +57,13 @@ func (t *TyTris) setupUI() {
 
 	t.heldArea.Init(6, 4, vec.Coord{30, 8}, 0)
 	t.heldArea.SetupBorder("", "held piece")
+	t.held_flash = gfx.FlashAnimation{
+		Animation: gfx.Animation{
+			Duration: 15,
+			Area: t.heldArea.DrawableArea(),
+		},
+	}
+	t.heldArea.AddAnimation(&t.held_flash)
 
 	held_piece := PieceElement{}
 	held_piece.Init(3, 2, vec.Coord{1, 1}, 1)

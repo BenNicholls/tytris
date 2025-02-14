@@ -49,9 +49,13 @@ func main() {
 type TyTris struct {
 	engine.StatePrototype
 
+	//ui elements
 	playField    PlayField
 	upcomingArea UpcomingPieceView
 	heldArea     GridArea
+
+	//animations
+	held_flash gfx.FlashAnimation
 
 	current_piece   Piece
 	held_piece      Piece
@@ -150,7 +154,7 @@ func (t *TyTris) rotatePiece(dir int) {
 	t.current_piece.Rotate(dir)
 	t.current_piece.pos.Move(kick.X, kick.Y)
 	t.updateGhost()
-	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 }
 
 func (t *TyTris) testRotate(dir int) (kick vec.Coord, ok bool) {
@@ -169,7 +173,7 @@ func (t *TyTris) testRotate(dir int) (kick vec.Coord, ok bool) {
 		test_piece.pos = test_piece.pos.Subtract(test_kick)
 	}
 
-	return 
+	return
 }
 
 func (t *TyTris) movePiece(dir vec.Direction) {
@@ -179,7 +183,7 @@ func (t *TyTris) movePiece(dir vec.Direction) {
 
 	t.current_piece.pos.Move(dir.X, dir.Y)
 	t.updateGhost()
-	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 }
 
 func (t *TyTris) testMove(dir vec.Direction) bool {
@@ -273,7 +277,7 @@ func (t *TyTris) updateGhost() {
 	}
 
 	test_piece.pos = t.ghost_position
-	ui.GetLabelledElement[*PieceElement](t.Window(), "ghost").UpdatePiece(test_piece)
+	ui.GetLabelled[*PieceElement](t.Window(), "ghost").UpdatePiece(test_piece)
 }
 
 // adds a shuffled set of the 7 pieces to the upcoming piece list
@@ -296,7 +300,7 @@ func (t *TyTris) spawn_piece(piece Piece) {
 	t.current_piece.pos = piece.StartLocation()
 
 	t.updateGhost()
-	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 
 	//update gravity if necessary
 	t.gravity = util.Clamp(starting_gravity-engine.GetTick()/acceleration_time, gravity_minimum, starting_gravity)
@@ -332,14 +336,20 @@ func (t *TyTris) swap_held_piece() {
 	}
 
 	t.swapped_piece = true
+	t.heldArea.Updated = true
 
-	ui.GetLabelledElement[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
+	held_element := ui.GetLabelled[*PieceElement](t.Window(), "held")
+	held_element.UpdatePiece(t.held_piece)
+	if t.held_piece.pType == O {
+		held_element.MoveTo(vec.Coord{2,1})
+	} else {
+		held_element.MoveTo(vec.Coord{1,1})
+	}
+
+
 	colour := t.held_piece.Colour()
-
-	flash := gfx.NewFlashAnimation(t.heldArea.DrawableArea(), 0, col.Pair{colour, colour}, 15)
-	flash.OneShot = true
-	flash.Play()
-	t.heldArea.AddAnimation(flash)
+	t.held_flash.Colours = col.Pair{colour, colour}
+	t.held_flash.Play()
 }
 
 type Line struct {
