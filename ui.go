@@ -66,7 +66,7 @@ func (t *TyTris) setupUI() {
 	t.Window().AddChildren(&t.upcomingArea, &t.heldArea)
 }
 
-func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph int, colour, highlight uint32) {
+func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph gfx.Glyph, colour, highlight uint32) {
 	canvas.DrawVisuals(block_pos, 1, gfx.NewGlyphVisuals(glyph, col.Pair{highlight, colour}))
 }
 

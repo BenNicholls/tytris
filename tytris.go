@@ -142,19 +142,34 @@ func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 }
 
 func (t *TyTris) rotatePiece(dir int) {
-	if !t.testRotate(dir) {
+	kick, ok := t.testRotate(dir)
+	if !ok {
 		return
 	}
 
 	t.current_piece.Rotate(dir)
+	t.current_piece.pos.Move(kick.X, kick.Y)
 	t.updateGhost()
 	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 }
 
-func (t *TyTris) testRotate(dir int) bool {
+func (t *TyTris) testRotate(dir int) (kick vec.Coord, ok bool) {
 	test_piece := t.current_piece
 	test_piece.Rotate(dir)
-	return t.testValidPosition(test_piece)
+	if t.testValidPosition(test_piece) {
+		return vec.ZERO_COORD, true
+	}
+
+	//try kicks
+	for _, test_kick := range test_piece.GetKicks() {
+		test_piece.pos.Move(test_kick.X, test_kick.Y)
+		if t.testValidPosition(test_piece) {
+			return test_kick, true
+		}
+		test_piece.pos = test_piece.pos.Subtract(test_kick)
+	}
+
+	return 
 }
 
 func (t *TyTris) movePiece(dir vec.Direction) {
@@ -174,16 +189,16 @@ func (t *TyTris) testMove(dir vec.Direction) bool {
 }
 
 func (t *TyTris) testValidPosition(piece Piece) bool {
-	// test leaving well
-	if intersect := vec.FindIntersectionRect(piece.Bounds(), vec.Rect{vec.ZERO_COORD, WellDims}); intersect.Area() != piece.Bounds().Area() {
-		return false
-	}
-
-	// test collide with matrix
-	piece_shape := piece.Shape()
-	for i, block := range piece_shape.shape {
+	piece_shape := piece.GetShape()
+	for i, block := range piece_shape {
 		if block {
-			block_pos := piece.Bounds().Coord.Add(vec.IndexToCoord(i, piece_shape.stride))
+			block_pos := piece.pos.Add(vec.IndexToCoord(i, piece.Stride()))
+			//not in well
+			if !vec.IsInside(block_pos, vec.Rect{vec.ZERO_COORD, WellDims}) {
+				return false
+			}
+
+			//collide with matrix
 			if t.matrix[block_pos.Y].blocks[block_pos.X] != NO_PIECE {
 				return false
 			}
@@ -200,10 +215,10 @@ func (t *TyTris) dropPiece() {
 
 func (t *TyTris) lockPiece() {
 	//write piece in current position to lines buffers
-	piece_shape := t.current_piece.Shape()
-	for i, block := range piece_shape.shape {
+	piece_shape := t.current_piece.GetShape()
+	for i, block := range piece_shape {
 		if block {
-			block_pos := t.current_piece.pos.Add(vec.IndexToCoord(i, piece_shape.stride))
+			block_pos := t.current_piece.pos.Add(vec.IndexToCoord(i, t.current_piece.Stride()))
 			t.matrix[block_pos.Y].blocks[block_pos.X] = t.current_piece.pType
 		}
 	}
@@ -264,6 +279,7 @@ func (t *TyTris) updateGhost() {
 // adds a shuffled set of the 7 pieces to the upcoming piece list
 func (t *TyTris) shuffle_pieces() {
 	pieces := []PieceType{I, J, Z, S, T, O, L}
+	//pieces := []PieceType{T, T, T, T, T, T, T}
 	rand.Shuffle(len(pieces), func(i, j int) {
 		pieces[i], pieces[j] = pieces[j], pieces[i]
 	})
@@ -277,11 +293,7 @@ func (t *TyTris) shuffle_pieces() {
 
 func (t *TyTris) spawn_piece(piece Piece) {
 	t.current_piece = piece
-	t.current_piece.pos = vec.Coord{3, 0}
-
-	if t.current_piece.pType == I {
-		t.current_piece.pos.Y = 1
-	}
+	t.current_piece.pos = piece.StartLocation()
 
 	t.updateGhost()
 	ui.GetLabelledElement[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)

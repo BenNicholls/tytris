@@ -1,8 +1,6 @@
 package main
 
 import (
-	"slices"
-
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/util"
 	"github.com/bennicholls/tyumi/vec"
@@ -28,83 +26,98 @@ const (
 	NO_PIECE
 )
 
+type PieceData struct {
+	default_shape    []bool
+	stride           int
+	colour           uint32
+	highlight_colour uint32
+	start_location   vec.Coord
+}
+
 var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 	{ // I
-		default_shape: PieceShape{
-			shape:  []bool{true, true, true, true},
-			stride: 4,
+		default_shape: []bool{
+			false, false, false, false,
+			true, true, true, true,
+			false, false, false, false,
+			false, false, false, false,
 		},
+		stride:           4,
 		colour:           col.MakeOpaque(0, 163, 217),
 		highlight_colour: col.MakeOpaque(102, 217, 255),
-		max_rotations:    1,
+		start_location:   vec.Coord{3, 1},
 	},
 
 	{ // J
-		default_shape: PieceShape{
-			shape:  []bool{true, false, false, true, true, true},
-			stride: 3,
+		default_shape: []bool{
+			true, false, false,
+			true, true, true,
+			false, false, false,
 		},
+		stride:           3,
 		colour:           col.MakeOpaque(26, 0, 102),
 		highlight_colour: col.MakeOpaque(64, 0, 255),
-		max_rotations:    3,
+		start_location:   vec.Coord{3, 0},
 	},
 
 	{ // L
-		default_shape: PieceShape{
-			shape:  []bool{false, false, true, true, true, true},
-			stride: 3,
+		default_shape: []bool{
+			false, false, true,
+			true, true, true,
+			false, false, false,
 		},
+		stride:           3,
 		colour:           col.MakeOpaque(255, 128, 0),
 		highlight_colour: col.MakeOpaque(255, 178, 102),
-		max_rotations:    3,
+		start_location:   vec.Coord{3, 0},
 	},
 
 	{ // O
-		default_shape: PieceShape{
-			shape:  []bool{true, true, true, true},
-			stride: 2,
+		default_shape: []bool{
+			true, true,
+			true, true,
 		},
+		stride:           2,
 		colour:           col.MakeOpaque(217, 217, 0),
 		highlight_colour: col.MakeOpaque(255, 255, 102),
-		max_rotations:    0,
+		start_location:   vec.Coord{4, 0},
 	},
 
 	{ // S
-		default_shape: PieceShape{
-			shape:  []bool{false, true, true, true, true, false},
-			stride: 3,
+		default_shape: []bool{
+			false, true, true,
+			true, true, false,
+			false, false, false,
 		},
+		stride:           3,
 		colour:           col.MakeOpaque(0, 102, 0),
 		highlight_colour: col.MakeOpaque(0, 217, 0),
-		max_rotations:    1,
+		start_location:   vec.Coord{3, 0},
 	},
 
 	{ // Z
-		default_shape: PieceShape{
-			shape:  []bool{true, true, false, false, true, true},
-			stride: 3,
+		default_shape: []bool{
+			true, true, false,
+			false, true, true,
+			false, false, false,
 		},
+		stride:           3,
 		colour:           col.MakeOpaque(178, 0, 45),
 		highlight_colour: col.MakeOpaque(255, 51, 102),
-		max_rotations:    1,
+		start_location:   vec.Coord{3, 0},
 	},
 
 	{ // T
-		default_shape: PieceShape{
-			shape:  []bool{false, true, false, true, true, true},
-			stride: 3,
+		default_shape: []bool{
+			false, true, false,
+			true, true, true,
+			false, false, false,
 		},
+		stride:           3,
 		colour:           col.MakeOpaque(140, 0, 140),
 		highlight_colour: col.MakeOpaque(255, 51, 255),
-		max_rotations:    3,
+		start_location:   vec.Coord{3, 0},
 	},
-}
-
-type PieceData struct {
-	default_shape    PieceShape
-	colour           uint32
-	highlight_colour uint32
-	max_rotations    int
 }
 
 type Piece struct {
@@ -121,88 +134,61 @@ func (p Piece) Highlight() uint32 {
 	return pieceData[p.pType].highlight_colour
 }
 
-func (p Piece) Shape() PieceShape {
+func (p Piece) StartLocation() vec.Coord {
+	return pieceData[p.pType].start_location
+}
+
+func (p Piece) Stride() int {
+	return pieceData[p.pType].stride
+}
+
+func (p Piece) GetKicks() []vec.Coord {
+	switch p.pType {
+	case O:
+		return []vec.Coord{}
+	case I:
+		return []vec.Coord{{-1, 0}, {1, 0}, {-2, 0}, {2, 0}}
+	default:
+		return []vec.Coord{{-1, 0}, {1, 0}}
+	}
+}
+
+func (p Piece) GetShape() []bool {
 	if p.rotation == 0 {
 		return pieceData[p.pType].default_shape
 	}
 
 	def_shape := pieceData[p.pType].default_shape
-	rot_shape := PieceShape{}
-	rot_shape.shape = make([]bool, len(def_shape.shape))
+	rot_shape := make([]bool, len(def_shape))
+	stride := p.Stride()
 
-	switch p.rotation {
-	case 1:
-		if p.pType == I {
-			if def_shape.stride == 1 {
-				rot_shape.stride = 4
-			} else {
-				rot_shape.stride = 1
+	for i, block := range def_shape {
+		if block {
+			pos := vec.IndexToCoord(i, stride)
+			var rot_pos vec.Coord
+			switch p.rotation {
+			case 1:
+				rot_pos = vec.Coord{-pos.Y + stride - 1, pos.X}
+			case 2:
+				rot_pos = vec.Coord{-pos.X + stride - 1, -pos.Y + stride - 1}
+			case 3:
+				rot_pos = vec.Coord{pos.Y, -pos.X + stride - 1}
 			}
-			rot_shape.shape = def_shape.shape
-		} else {
-			if def_shape.stride == 2 {
-				rot_shape.stride = 3
-				rot_shape.shape[0] = def_shape.shape[4]
-				rot_shape.shape[1] = def_shape.shape[2]
-				rot_shape.shape[2] = def_shape.shape[0]
-				rot_shape.shape[3] = def_shape.shape[5]
-				rot_shape.shape[4] = def_shape.shape[3]
-				rot_shape.shape[5] = def_shape.shape[1]
-			} else {
-				rot_shape.stride = 2
-				rot_shape.shape[0] = def_shape.shape[3]
-				rot_shape.shape[1] = def_shape.shape[0]
-				rot_shape.shape[2] = def_shape.shape[4]
-				rot_shape.shape[3] = def_shape.shape[1]
-				rot_shape.shape[4] = def_shape.shape[5]
-				rot_shape.shape[5] = def_shape.shape[2]
-			}
-		}
-	case 2: //upside-down
-		for i, val := range slices.Backward[[]bool](def_shape.shape) {
-			rot_shape.shape[len(def_shape.shape)-1-i] = val
-		}
-		rot_shape.stride = def_shape.stride
-	case 3:
-		if def_shape.stride == 2 {
-			rot_shape.stride = 3
-			rot_shape.shape[0] = def_shape.shape[1]
-			rot_shape.shape[1] = def_shape.shape[3]
-			rot_shape.shape[2] = def_shape.shape[5]
-			rot_shape.shape[3] = def_shape.shape[0]
-			rot_shape.shape[4] = def_shape.shape[2]
-			rot_shape.shape[5] = def_shape.shape[4]
-		} else {
-			rot_shape.stride = 2
-			rot_shape.shape[0] = def_shape.shape[2]
-			rot_shape.shape[1] = def_shape.shape[5]
-			rot_shape.shape[2] = def_shape.shape[1]
-			rot_shape.shape[3] = def_shape.shape[4]
-			rot_shape.shape[4] = def_shape.shape[0]
-			rot_shape.shape[5] = def_shape.shape[3]
+			rot_shape[rot_pos.ToIndex(stride)] = true
 		}
 	}
 
 	return rot_shape
 }
 
-func (p Piece) Bounds() vec.Rect {
-	return vec.Rect{p.pos, p.Dims()}
-}
-
 func (p Piece) Dims() vec.Dims {
-	return p.Shape().Dims()
+	return vec.Dims{p.Stride(), p.Stride()}
 }
 
 func (p *Piece) Rotate(dir int) {
-	p.rotation = util.CycleClamp(p.rotation+dir, 0, pieceData[p.pType].max_rotations)
-}
+	if p.pType == O {
+		return
+	}
 
-type PieceShape struct {
-	shape  []bool
-	stride int
-}
-
-func (ps PieceShape) Dims() vec.Dims {
-	return vec.Dims{ps.stride, len(ps.shape) / ps.stride}
+	p.rotation = util.CycleClamp(p.rotation+dir, 0, 3)
 }

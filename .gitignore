@@ -4,3 +4,4 @@ go.work*
 *.dll
 *.exe
 .vscode/
+tytris

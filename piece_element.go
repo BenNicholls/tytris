@@ -20,7 +20,7 @@ func (pe *PieceElement) Init(w, h int, pos vec.Coord, depth int) {
 		Mode:    gfx.DRAW_NONE,
 		Colours: col.Pair{col.LIME, col.FUSCHIA},
 	})
-	
+
 	pe.piece.pType = NO_PIECE
 }
 
@@ -35,7 +35,7 @@ func (pe *PieceElement) UpdatePiece(p Piece) {
 	if pe.piece.pType == NO_PIECE || pe.piece.Dims() != p.Dims() {
 		pe.Resize(p.Dims())
 		pe.Updated = true
-	} else if pe.piece.pType != p.pType {
+	} else if pe.piece.pType != p.pType || pe.piece.rotation != p.rotation {
 		pe.Clear()
 		pe.Updated = true
 		pe.GetParent().ForceRedraw()
@@ -53,16 +53,16 @@ func (pe *PieceElement) Render() {
 		return
 	}
 
-	shape := pe.piece.Shape()
-	stride := shape.stride
-	for i, piece_block := range shape.shape {
+	shape := pe.piece.GetShape()
+	stride := pe.piece.Stride()
+	for i, piece_block := range shape {
 		offset := vec.IndexToCoord(i, stride)
 		if piece_block {
 			glyph := gfx.GLYPH_NONE
 			if pe.ghost {
 				drawBlock(&pe.Canvas, offset, glyph, col.LIGHTGREY, col.NONE)
 			} else {
-				if i < stride || !shape.shape[i-stride] {
+				if i < stride || !shape[i-stride] {
 					glyph = gfx.GLYPH_HALFBLOCK_UP
 				}
 				drawBlock(&pe.Canvas, offset, glyph, pe.piece.Colour(), pe.piece.Highlight())
