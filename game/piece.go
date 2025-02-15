@@ -45,7 +45,7 @@ var pieceData [MAX_PIECETYPE]PieceData = [MAX_PIECETYPE]PieceData{
 		stride:           4,
 		colour:           col.MakeOpaque(0, 163, 217),
 		highlight_colour: col.MakeOpaque(102, 217, 255),
-		start_location:   vec.Coord{3, 1},
+		start_location:   vec.Coord{3, 0},
 	},
 
 	{ // J

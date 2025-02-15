@@ -20,10 +20,9 @@ func (t *TyTris) setupUI() {
 	tytris_border := ui.BorderStyles["Thin"]
 	tytris_border.Colours = col.Pair{border_colour, background_colour}
 	ui.SetDefaultBorderStyle(tytris_border)
-
 	logoImage := ui.Image{}
-	logoImage.Init(12, 6, vec.Coord{3, 1}, 0, "res/logo.xp")
-	subtitle := ui.NewTextbox(11, ui.FIT_TEXT, vec.Coord{4, 8}, 0, "The Fun Game That No One Stole At All!", true)
+	logoImage.Init(12, 6, vec.Coord{3, 2}, 0, "res/logo.xp")
+	subtitle := ui.NewTextbox(11, ui.FIT_TEXT, vec.Coord{4, 9}, 0, "The Fun Game That No One Stole At All!", true)
 	subtitle.SetDefaultColours(col.Pair{text_colour, gfx.COL_DEFAULT})
 
 	t.Window().AddChildren(&logoImage, subtitle)
@@ -57,12 +56,7 @@ func (t *TyTris) setupUI() {
 
 	t.heldArea.Init(6, 4, vec.Coord{30, 8}, 0)
 	t.heldArea.SetupBorder("", "held piece")
-	t.held_flash = gfx.FlashAnimation{
-		Animation: gfx.Animation{
-			Duration: 15,
-			Area: t.heldArea.DrawableArea(),
-		},
-	}
+	t.held_flash = gfx.NewFlashAnimation(t.heldArea.DrawableArea(), 1, col.Pair{col.NONE, col.NONE}, 15)
 	t.heldArea.AddAnimation(&t.held_flash)
 
 	held_piece := PieceElement{}
@@ -83,6 +77,19 @@ func (t *TyTris) setupUI() {
 	score.SetDefaultColours(col.Pair{text_colour, col.NONE})
 	infoArea.AddChildren(scoreLabel, score)
 
+	timeLabel := ui.NewTextbox(14, 1, vec.Coord{0, 2}, 1, "T I M E R", true)
+	timeLabel.SetDefaultColours(col.Pair{text_colour, border_colour})
+	time := ui.NewTextbox(14, 1, vec.Coord{0, 3}, 1, "0", true)
+	time.SetLabel("time")
+	time.SetDefaultColours(col.Pair{text_colour, border_colour})
+	infoArea.AddChildren(timeLabel, time)
+
+	speedLabel := ui.NewTextbox(14, 1, vec.Coord{0, 4}, 1, "S P E E D", true)
+	speedLabel.SetDefaultColours(col.Pair{text_colour, col.NONE})
+	speed := ui.NewTextbox(14, 1, vec.Coord{0, 5}, 1, "0", true)
+	speed.SetLabel("speed")
+	speed.SetDefaultColours(col.Pair{text_colour, col.NONE})
+	infoArea.AddChildren(speedLabel, speed)
 
 	t.Window().AddChild(&infoArea)
 

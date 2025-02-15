@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bennicholls/tyumi/event"
+	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/input"
@@ -11,7 +12,6 @@ import (
 func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 	if event.ID() == input.EV_KEYBOARD {
 		key_event := event.(*input.KeyboardEvent)
-
 		switch key_event.PressType {
 		case input.KEY_PRESSED:
 			switch key_event.Direction() {
@@ -40,7 +40,6 @@ func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 				t.swap_held_piece()
 				event_handled = true
 			}
-
 		case input.KEY_RELEASED:
 			if key_event.Direction() == vec.DIR_DOWN {
 				t.speed_up = false
@@ -52,7 +51,23 @@ func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 	return
 }
 
+func (t *TyTris) handleEvent(event event.Event) (event_handled bool) {
+	if event.ID() == gfx.EV_ANIMATION_COMPLETE {
+		anim_event := event.(*gfx.AnimationEvent)
+		if anim_event.Label == "line destroy" {
+			t.spawn_next = true
+			event_handled = true
+		}
+	}
+
+	return
+}
+
 func (t *TyTris) rotatePiece(dir int) {
+	if t.current_piece.pType == NO_PIECE {
+		return
+	}
+
 	kick, ok := t.testRotate(dir)
 	if !ok {
 		return
@@ -65,6 +80,10 @@ func (t *TyTris) rotatePiece(dir int) {
 }
 
 func (t *TyTris) movePiece(dir vec.Direction) {
+	if t.current_piece.pType == NO_PIECE {
+		return
+	}
+
 	if !t.testMove(dir) {
 		return
 	}
@@ -75,11 +94,19 @@ func (t *TyTris) movePiece(dir vec.Direction) {
 }
 
 func (t *TyTris) dropPiece() {
+	if t.current_piece.pType == NO_PIECE {
+		return
+	}
+
 	t.current_piece.pos = t.ghost_position
 	t.lockPiece()
 }
 
 func (t *TyTris) swap_held_piece() {
+	if t.current_piece.pType == NO_PIECE {
+		return
+	}
+
 	if t.held_piece.pType == t.current_piece.pType {
 		return
 	}

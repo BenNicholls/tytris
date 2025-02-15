@@ -6,6 +6,8 @@ import (
 	"github.com/bennicholls/tyumi/vec"
 )
 
+var LDA_Duration int = 18
+
 type PlayField struct {
 	GridArea
 
@@ -33,4 +35,22 @@ func (pf *PlayField) Render() {
 			}
 		}
 	}
+}
+
+type LineDestroyAnimation struct {
+	gfx.AnimationChain
+}
+
+func NewLineDestroyAnimation(area vec.Rect) (lda LineDestroyAnimation) {
+	lda.OneShot = true
+	lda.Label = "line destroy"
+	lda.Area = area
+	lda.Start()
+
+	flash1 := gfx.NewFadeAnimation(area, 1, col.Pair{col.PURPLE, col.PURPLE}, LDA_Duration/2)
+	flash2 := gfx.NewFadeAnimation(area, 1, col.Pair{background_colour, background_colour}, LDA_Duration/2)
+
+	lda.Add(&flash1, &flash2)
+
+	return
 }

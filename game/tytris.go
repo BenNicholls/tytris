@@ -64,20 +64,30 @@ type TyTris struct {
 	matrix          []Line
 	upcoming_pieces []Piece
 
-	score                int // HIGHER IS BETTER!!!!!
-	last_piece_drop_tick int
-	gravity              int
-	gameTick             int  // ticks since game was started
-	speed_up             bool // will be true if player is holding down the DOWN key
-	swapped_piece        bool // whether or not a swap has taken place for this piece
-
+	score            int // HIGHER IS BETTER!!!!!
+	piece_spawn_tick int
+	gravity          int
+	gameTick         int  // ticks since game was started
+	speed_up         bool // will be true if player is holding down the DOWN key
+	swapped_piece    bool // whether or not a swap has taken place for this piece
+	spawn_next       bool // true if a new piece needs to be spawned
 }
 
 func (t *TyTris) setup() {
+	// set the event handler for game events, engine events, etc. we also tell the event stream which events
+	// to listen for. 
+	t.SetEventHandler(t.handleEvent)
+	t.Events().Listen(gfx.EV_ANIMATION_COMPLETE)
+
+	// set the event handler for input events. these are keypresses, mouse movements, etc. the state object
+	// sets the input event stream to listen to input events for us by default
 	t.SetInputHandler(t.handleInput)
 
+	// do some game and ui setup
 	t.matrix = make([]Line, WellDims.H)
 	t.setupUI()
+
+	// setup a new game! with this done, the game will commence once tyumi's gameloop begins running
 	t.new_game()
 }
 
@@ -92,17 +102,37 @@ func (t *TyTris) new_game() {
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
 	t.held_piece = Piece{pType: NO_PIECE}
-	t.spawn_piece(t.get_next_piece())
+	t.spawn_next = true
 }
 
 func (t *TyTris) Update() {
+	if t.spawn_next {
+		//test for game over
+		for i := range InvalidLines {
+			if t.matrix[i].hasBlock() {
+				log.Info("GAME OVER, YOU STINK LOSER!")
+				event.Fire(event.New(engine.EV_QUIT))
+				return
+			}
+		}
+
+		t.cleanMatrix()
+
+		t.spawn_piece(t.get_next_piece())
+		t.spawn_next = false
+	}
+
+	if t.current_piece.pType == NO_PIECE {
+		return
+	}
+
 	//apply gravity
 	current_gravity := t.gravity
 	if t.speed_up && t.gravity > speed_up_gravity {
 		current_gravity = speed_up_gravity
 	}
 
-	if (t.gameTick-t.last_piece_drop_tick)%current_gravity == 0 {
+	if (t.gameTick-t.piece_spawn_tick)%current_gravity == 0 {
 		if t.testMove(vec.DIR_DOWN) {
 			t.movePiece(vec.DIR_DOWN)
 		} else {
@@ -114,7 +144,7 @@ func (t *TyTris) Update() {
 }
 
 func (t *TyTris) updateScore(lines_destroyed int) {
-	points := lines_destroyed*10
+	points := lines_destroyed * 10
 	//do more score stuff here????
 
 	t.score += points
@@ -176,13 +206,17 @@ func (t *TyTris) lockPiece() {
 		}
 	}
 
+	t.current_piece.pType = NO_PIECE
+	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+
 	t.playField.Updated = true
 
 	//test for full lines
 	var destroyed_lines int
 	for i, line := range t.matrix {
 		if line.isFull() {
-			t.destroyLine(i)
+			lda := NewLineDestroyAnimation(vec.Rect{vec.Coord{0, i}, vec.Dims{WellDims.W, 1}})
+			t.playField.AddAnimation(&lda)
 			destroyed_lines += 1
 			//i dunno, do some animations or something??
 		}
@@ -190,20 +224,17 @@ func (t *TyTris) lockPiece() {
 
 	if destroyed_lines > 0 {
 		t.updateScore(destroyed_lines)
+	} else {
+		t.spawn_next = true
 	}
+}
 
-	//test for game over
-	for i := range InvalidLines {
-		if t.matrix[i].hasBlock() {
-			log.Info("GAME OVER, YOU STINK LOSER!")
-			event.Fire(event.New(engine.EV_QUIT))
-			return
+func (t *TyTris) cleanMatrix() {
+	for i, line := range t.matrix {
+		if line.isFull() {
+			t.destroyLine(i)
 		}
 	}
-
-	t.last_piece_drop_tick = t.gameTick
-	t.swapped_piece = false
-	t.spawn_piece(t.get_next_piece())
 }
 
 func (t *TyTris) destroyLine(line_index int) {
@@ -237,6 +268,7 @@ func (t *TyTris) updateGhost() {
 func (t *TyTris) shuffle_pieces() {
 	pieces := []PieceType{I, J, Z, S, T, O, L}
 	//pieces := []PieceType{T, T, T, T, T, T, T}
+	//pieces := []PieceType{O, O, O, O, O, O, O}
 	rand.Shuffle(len(pieces), func(i, j int) {
 		pieces[i], pieces[j] = pieces[j], pieces[i]
 	})
@@ -251,12 +283,14 @@ func (t *TyTris) shuffle_pieces() {
 func (t *TyTris) spawn_piece(piece Piece) {
 	t.current_piece = piece
 	t.current_piece.pos = piece.StartLocation()
+	t.swapped_piece = false
 
 	t.updateGhost()
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 
 	//update gravity if necessary
 	t.gravity = util.Clamp(starting_gravity-t.gameTick/acceleration_time, gravity_minimum, starting_gravity)
+	t.piece_spawn_tick = t.gameTick
 }
 
 func (t *TyTris) get_next_piece() Piece {
