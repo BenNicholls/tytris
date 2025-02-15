@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/bennicholls/tyumi/event"
-	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/input"
@@ -45,18 +44,6 @@ func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
 				t.speed_up = false
 				event_handled = true
 			}
-		}
-	}
-
-	return
-}
-
-func (t *TyTris) handleEvent(event event.Event) (event_handled bool) {
-	if event.ID() == gfx.EV_ANIMATION_COMPLETE {
-		anim_event := event.(*gfx.AnimationEvent)
-		if anim_event.Label == "line destroy" {
-			t.spawn_next = true
-			event_handled = true
 		}
 	}
 

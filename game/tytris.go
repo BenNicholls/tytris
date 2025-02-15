@@ -74,11 +74,6 @@ type TyTris struct {
 }
 
 func (t *TyTris) setup() {
-	// set the event handler for game events, engine events, etc. we also tell the event stream which events
-	// to listen for. 
-	t.SetEventHandler(t.handleEvent)
-	t.Events().Listen(gfx.EV_ANIMATION_COMPLETE)
-
 	// set the event handler for input events. these are keypresses, mouse movements, etc. the state object
 	// sets the input event stream to listen to input events for us by default
 	t.SetInputHandler(t.handleInput)
@@ -224,9 +219,9 @@ func (t *TyTris) lockPiece() {
 
 	if destroyed_lines > 0 {
 		t.updateScore(destroyed_lines)
-	} else {
-		t.spawn_next = true
 	}
+
+	t.spawn_next = true
 }
 
 func (t *TyTris) cleanMatrix() {

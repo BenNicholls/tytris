@@ -6,7 +6,7 @@ import (
 	"github.com/bennicholls/tyumi/vec"
 )
 
-var LDA_Duration int = 18
+var LDA_Duration int = 20
 
 type PlayField struct {
 	GridArea
@@ -43,7 +43,7 @@ type LineDestroyAnimation struct {
 
 func NewLineDestroyAnimation(area vec.Rect) (lda LineDestroyAnimation) {
 	lda.OneShot = true
-	lda.Label = "line destroy"
+	lda.Blocking = true
 	lda.Area = area
 	lda.Start()
 
@@ -53,4 +53,21 @@ func NewLineDestroyAnimation(area vec.Rect) (lda LineDestroyAnimation) {
 	lda.Add(&flash1, &flash2)
 
 	return
+}
+
+func (lda *LineDestroyAnimation) Render(canvas *gfx.Canvas) {
+	lda.AnimationChain.Render(canvas)
+
+	x := int(float64(lda.GetTicks()) / float64(lda.GetDuration()/2) * float64(lda.Area.W/2))
+	mid := lda.Area.Coord
+	mid.X += lda.Area.W / 2
+	left := mid.StepN(vec.DIR_LEFT, x+1)
+	right := mid.StepN(vec.DIR_RIGHT, x)
+	for cursor := range vec.EachCoordInArea(lda.Area) {
+		if cursor == left || cursor == right {
+			canvas.DrawGlyph(cursor, 1, gfx.GLYPH_FILL_DENSE)
+		} else {
+			canvas.DrawGlyph(cursor, 1, gfx.GLYPH_NONE)
+		}
+	}
 }
