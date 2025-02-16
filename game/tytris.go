@@ -201,11 +201,10 @@ func (t *TyTris) lockPiece() {
 			t.matrix[block_pos.Y].blocks[block_pos.X] = t.current_piece.pType
 		}
 	}
+	t.matrixView.Updated = true
 
 	t.current_piece.pType = NO_PIECE
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
-
-	t.matrixView.Updated = true
 
 	//test for full lines
 	var destroyed_lines int

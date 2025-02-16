@@ -18,7 +18,7 @@ func (pe *PieceElement) Init(w, h int, pos vec.Coord, depth int) {
 	pe.ElementPrototype.Init(w, h, pos, depth)
 	pe.SetDefaultVisuals(gfx.Visuals{
 		Mode:    gfx.DRAW_NONE,
-		Colours: col.Pair{col.LIME, col.FUSCHIA},
+		Colours: col.Pair{col.WHITE, col.FUSCHIA},
 	})
 
 	pe.piece.pType = NO_PIECE

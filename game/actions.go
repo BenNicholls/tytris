@@ -123,6 +123,6 @@ func (t *TyTris) swap_held_piece() {
 	}
 
 	colour := t.held_piece.Colour()
-	t.held_flash.Colours = col.Pair{colour, colour}
+	t.held_flash.ToColours = col.Pair{colour, colour}
 	t.held_flash.Play()
 }
