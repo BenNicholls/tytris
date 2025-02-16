@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
@@ -30,7 +32,10 @@ func (t *TyTris) setupUI() {
 	//initialize the playfield, where the blocks fall and the matrix is drawn.
 	t.playField.Init(WellDims.W, WellDims.H, vec.Coord{19, 1}, 0)
 	t.playField.EnableBorder()
-	t.playField.matrix = &t.matrix
+
+	t.matrixView.Init(WellDims.W, WellDims.H, vec.ZERO_COORD, 1)
+	t.matrixView.matrix = &t.matrix
+	t.playField.AddChild(&t.matrixView)
 
 	current_piece := PieceElement{}
 	current_piece.Init(3, 2, vec.Coord{0, 0}, 2)
@@ -94,7 +99,7 @@ func (t *TyTris) setupUI() {
 	t.Window().AddChild(&infoArea)
 
 	highScoreArea := ui.ElementPrototype{}
-	highScoreArea.Init(12,13,vec.Coord{3,13}, 1)
+	highScoreArea.Init(12, 13, vec.Coord{3, 13}, 1)
 	highScoreArea.EnableBorder()
 
 	t.Window().AddChild(&highScoreArea)
@@ -104,34 +109,14 @@ func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph gfx.Glyph, colour,
 	canvas.DrawVisuals(block_pos, 1, gfx.NewGlyphVisuals(glyph, col.Pair{highlight, colour}))
 }
 
-type UpcomingPieceView struct {
-	GridArea
-}
+func (t *TyTris) UpdateUI() {
+	timer := ui.GetLabelled[*ui.Textbox](t.Window(), "time")
+	timer.ChangeText(strconv.Itoa(t.gameTick / 60))
 
-func (upv *UpcomingPieceView) UpdatePieces(pieces []Piece) {
-	piece_elements := upv.GetChildren()
-	for i, piece := range pieces {
-		piece_elements[i].(*PieceElement).UpdatePiece(piece)
-	}
-
-	x := 1
-	for i := range piece_elements {
-		piece_elements[i].MoveTo(vec.Coord{x, 1})
-		x += piece_elements[i].Size().W + 1
-	}
-}
-
-type GridArea struct {
-	ui.ElementPrototype
-}
-
-func (ga *GridArea) Render() {
-	//render checkerboard background
-	for cursor := range vec.EachCoordInArea(ga.Canvas) {
-		if (cursor.X+cursor.Y)%2 == 0 {
-			ga.DrawColours(cursor, 0, col.Pair{col.NONE, grid_colour})
-		} else {
-			ga.DrawColours(cursor, 0, col.Pair{col.NONE, ga.DefaultColours().Back})
-		}
+	speed := ui.GetLabelled[*ui.Textbox](t.Window(), "speed")
+	if t.gravity != gravity_minimum {
+		speed.ChangeText(strconv.Itoa(starting_gravity - t.gravity))
+	} else {
+		speed.ChangeText("MAXIMUM SPEED!!")
 	}
 }

@@ -52,6 +52,7 @@ type TyTris struct {
 
 	//ui elements
 	playField    PlayField
+	matrixView   MatrixView
 	upcomingArea UpcomingPieceView
 	heldArea     GridArea
 
@@ -204,7 +205,7 @@ func (t *TyTris) lockPiece() {
 	t.current_piece.pType = NO_PIECE
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 
-	t.playField.Updated = true
+	t.matrixView.Updated = true
 
 	//test for full lines
 	var destroyed_lines int
@@ -230,6 +231,8 @@ func (t *TyTris) cleanMatrix() {
 			t.destroyLine(i)
 		}
 	}
+
+	t.playField.Updated = true
 }
 
 func (t *TyTris) destroyLine(line_index int) {
@@ -241,6 +244,8 @@ func (t *TyTris) destroyLine(line_index int) {
 			break
 		}
 	}
+
+	t.matrixView.Updated = true
 }
 
 func (t *TyTris) updateGhost() {
