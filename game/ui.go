@@ -33,7 +33,7 @@ func (t *TyTris) setupUI() {
 	t.playField.Init(WellDims.W, WellDims.H, vec.Coord{19, 1}, 0)
 	t.playField.EnableBorder()
 
-	t.matrixView.Init(WellDims.W, WellDims.H, vec.ZERO_COORD, 1)
+	t.matrixView.Init(WellDims.W, WellDims.H, vec.ZERO_COORD, 2)
 	t.matrixView.matrix = &t.matrix
 	t.playField.AddChild(&t.matrixView)
 

@@ -60,7 +60,7 @@ func (pe *PieceElement) Render() {
 		if piece_block {
 			glyph := gfx.GLYPH_NONE
 			if pe.ghost {
-				drawBlock(&pe.Canvas, offset, glyph, col.LIGHTGREY, col.NONE)
+				drawBlock(&pe.Canvas, offset, glyph, col.DARKGREY, col.NONE)
 			} else {
 				if i < stride || !shape[i-stride] {
 					glyph = gfx.GLYPH_HALFBLOCK_UP

@@ -288,7 +288,13 @@ func (t *TyTris) spawn_piece(piece Piece) {
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
 
 	//update gravity if necessary
+	old_gravity := t.gravity
 	t.gravity = util.Clamp(starting_gravity-t.gameTick/acceleration_time, gravity_minimum, starting_gravity)
+	if t.gravity != old_gravity {
+		speedup_animation := NewSpeedUpAnimation()
+		t.playField.AddAnimation(&speedup_animation)
+	}
+
 	t.piece_spawn_tick = t.gameTick
 }
 
