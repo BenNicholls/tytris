@@ -110,6 +110,10 @@ func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph gfx.Glyph, colour,
 }
 
 func (t *TyTris) UpdateUI() {
+	if t.state != PLAYING {
+		return
+	}
+
 	timer := ui.GetLabelled[*ui.Textbox](t.Window(), "time")
 	timer.ChangeText(strconv.Itoa(t.gameTick / 60))
 

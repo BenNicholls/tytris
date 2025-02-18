@@ -81,7 +81,6 @@ func (sa *SpeedUpAnimation) Render(canvas *gfx.Canvas) {
 		if particle.ticks_remaining > 0 {
 			cell := canvas.GetCell(particle.pos)
 			vis := sa.particle_vis
-			//lerp_cols := col.Pair{cell.Colours.Back, cell.Colours.Back}
 			vis.Colours = vis.Colours.Lerp(cell.Colours, SUA_Particle_Decay-particle.ticks_remaining, SUA_Particle_Decay)
 			canvas.DrawVisuals(particle.pos, 1, vis)
 			sa.particles[i].ticks_remaining -= 1

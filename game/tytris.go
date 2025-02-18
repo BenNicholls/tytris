@@ -7,11 +7,9 @@ import (
 
 	"github.com/bennicholls/tyumi/engine"
 	"github.com/bennicholls/tyumi/engine/platform_sdl"
-	"github.com/bennicholls/tyumi/event"
 	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
-	"github.com/bennicholls/tyumi/input"
 	"github.com/bennicholls/tyumi/log"
 	"github.com/bennicholls/tyumi/util"
 	"github.com/bennicholls/tyumi/vec"
@@ -35,8 +33,6 @@ func main() {
 		Colours: col.Pair{border_colour, background_colour},
 	})
 
-	input.SuppressKeyRepeats()
-
 	game := TyTris{}
 	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
 	game.setup()
@@ -47,8 +43,17 @@ func main() {
 	return
 }
 
+const (
+	GAME_START int = iota
+	PLAYING
+	PAUSED
+	GAME_OVER
+)
+
 type TyTris struct {
 	engine.StatePrototype
+
+	state int // one of the constants above
 
 	//ui elements
 	playField    PlayField
@@ -75,23 +80,58 @@ type TyTris struct {
 }
 
 func (t *TyTris) setup() {
+	t.Events().AddHandler(t.handle_event)
+	t.Events().Listen(EV_CHANGESTATE)
 	// set the event handler for input events. these are keypresses, mouse movements, etc. the state object
 	// sets the input event stream to listen to input events for us by default
-	t.SetInputHandler(t.handleInput)
+	t.SetInputHandler(t.handleInput_gamestart)
 
 	// do some game and ui setup
 	t.matrix = make([]Line, WellDims.H)
-	t.setupUI()
+	for i := range t.matrix {
+		t.matrix[i].Clear()
+	}
 
-	// setup a new game! with this done, the game will commence once tyumi's gameloop begins running
-	t.new_game()
+	t.setupUI()
+}
+
+func (t *TyTris) changeState(new_state int) {
+	if new_state == t.state {
+		return
+	}
+
+	switch new_state {
+	case GAME_OVER:
+		log.Info("GAME OVER")
+		t.SetInputHandler(t.handleInput_gameover)
+		//show game over message and new game button
+	case PLAYING:
+		//if previous state was paused, just hide the pause message and resume
+		//otherwise we're start a new game. do new game setup
+		log.Info("STARTING NEW GAME")
+		t.SetInputHandler(t.handleInput_playing)
+		t.new_game()
+	case PAUSED:
+		if t.state != PLAYING {
+			return
+		}
+
+		//if previous state was playing, pause game and show pause message, wait for input
+		log.Info("GAME PAUSED")
+		t.SetInputHandler(t.handleInput_paused)
+	default:
+		log.Error("Oops, bad state change.")
+		return
+	}
+
+	t.state = new_state
 }
 
 func (t *TyTris) new_game() {
 	for i := range t.matrix {
 		t.matrix[i].Clear()
 	}
-
+	
 	t.gameTick = 0
 	t.score = 0
 	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText("0")
@@ -99,15 +139,22 @@ func (t *TyTris) new_game() {
 	t.gravity = starting_gravity
 	t.held_piece = Piece{pType: NO_PIECE}
 	t.spawn_next = true
+	
+	t.matrixView.Updated = true
+	t.heldArea.Updated = true
+	ui.GetLabelled[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
 }
 
 func (t *TyTris) Update() {
+	if t.state != PLAYING {
+		return
+	}
+
 	if t.spawn_next {
 		//test for game over
 		for i := range InvalidLines {
 			if t.matrix[i].hasBlock() {
-				log.Info("GAME OVER, YOU STINK LOSER!")
-				event.Fire(event.New(engine.EV_QUIT))
+				fireStateChangeEvent(GAME_OVER)
 				return
 			}
 		}

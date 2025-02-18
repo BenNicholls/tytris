@@ -8,7 +8,8 @@ import (
 	"github.com/bennicholls/tyumi/vec"
 )
 
-func (t *TyTris) handleInput(event event.Event) (event_handled bool) {
+// input handler for when we're playing
+func (t *TyTris) handleInput_playing(event event.Event) (event_handled bool) {
 	if event.ID() == input.EV_KEYBOARD {
 		key_event := event.(*input.KeyboardEvent)
 		switch key_event.PressType {
@@ -125,4 +126,34 @@ func (t *TyTris) swap_held_piece() {
 	colour := t.held_piece.Colour()
 	t.held_flash.ToColours = col.Pair{colour, colour}
 	t.held_flash.Play()
+}
+
+// input handler for game start state
+func (t *TyTris) handleInput_gamestart(event event.Event) (event_handled bool) {
+	if event.ID() == input.EV_KEYBOARD {
+		fireStateChangeEvent(PLAYING)
+		event_handled = true
+	}
+
+	return
+}
+
+// input handler for game paused state
+func (t *TyTris) handleInput_paused(event event.Event) (event_handled bool) {
+	if event.ID() == input.EV_KEYBOARD {
+		fireStateChangeEvent(PLAYING)
+		event_handled = true
+	}
+
+	return
+}
+
+// input handler for game over state
+func (t *TyTris) handleInput_gameover(event event.Event) (event_handled bool) {
+	if event.ID() == input.EV_KEYBOARD {
+		fireStateChangeEvent(PLAYING)
+		event_handled = true
+	}
+	
+	return
 }
