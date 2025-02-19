@@ -26,10 +26,10 @@ func (pe *PieceElement) Init(size vec.Dims, pos vec.Coord, depth int) {
 
 func (pe *PieceElement) UpdatePiece(p Piece) {
 	if p.pType == NO_PIECE {
-		pe.SetVisible(false)
+		pe.Hide()
 		return
 	} else {
-		pe.SetVisible(true)
+		pe.Show()
 	}
 
 	if pe.piece.pType == NO_PIECE || pe.piece.Dims() != p.Dims() {

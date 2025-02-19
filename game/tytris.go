@@ -228,7 +228,7 @@ func (t *TyTris) testValidPosition(piece Piece) bool {
 		if block {
 			block_pos := piece.pos.Add(vec.IndexToCoord(i, piece.Stride()))
 			//not in well
-			if !vec.IsInside(block_pos, vec.Rect{vec.ZERO_COORD, WellDims}) {
+			if !block_pos.IsInside(WellDims) {
 				return false
 			}
 
