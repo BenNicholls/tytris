@@ -24,7 +24,7 @@ var InvalidLines int = 3
 
 func main() {
 	log.EnableConsoleOutput()
-	engine.InitConsole(48, 27)
+	engine.InitConsole(vec.Dims{48, 27})
 	engine.SetPlatform(platform_sdl.New())
 	engine.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
 
@@ -34,7 +34,7 @@ func main() {
 	})
 
 	game := TyTris{}
-	game.Init(engine.FIT_CONSOLE, engine.FIT_CONSOLE)
+	game.Init(vec.Dims{engine.FIT_CONSOLE, engine.FIT_CONSOLE})
 	game.setup()
 	engine.SetInitialMainState(&game)
 
@@ -131,7 +131,7 @@ func (t *TyTris) new_game() {
 	for i := range t.matrix {
 		t.matrix[i].Clear()
 	}
-	
+
 	t.gameTick = 0
 	t.score = 0
 	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText("0")
@@ -139,7 +139,7 @@ func (t *TyTris) new_game() {
 	t.gravity = starting_gravity
 	t.held_piece = Piece{pType: NO_PIECE}
 	t.spawn_next = true
-	
+
 	t.matrixView.Updated = true
 	t.heldArea.Updated = true
 	ui.GetLabelled[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
