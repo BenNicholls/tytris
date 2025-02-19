@@ -194,7 +194,12 @@ func (t *TyTris) updateScore(lines_destroyed int) {
 	//do more score stuff here????
 
 	t.score += points
-	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText(strconv.Itoa(t.score))
+	score_text := ui.GetLabelled[*ui.Textbox](t.Window(), "score")
+	score_text.ChangeText(strconv.Itoa(t.score))
+	pulse := gfx.NewPulseAnimation(score_text.DrawableArea(), 0, 12, col.Pair{col.YELLOW, col.NONE})
+	pulse.OneShot = true
+	pulse.Start()
+	score_text.AddAnimation(&pulse)
 }
 
 func (t *TyTris) testRotate(dir int) (kick vec.Coord, ok bool) {
