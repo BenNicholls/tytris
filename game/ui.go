@@ -108,6 +108,13 @@ func (t *TyTris) setupUI() {
 	highScoreArea.EnableBorder()
 
 	t.Window().AddChild(&highScoreArea)
+
+	//main menu. this will be a child of the playarea, blocking the view of the matrix and everything else when
+	//visibility is toggled on. we'll also use this as the pause menu, with a change in some text
+	mainMenu := MainMenu{}
+	mainMenu.Init(t.playField.DrawableArea().Dims)
+
+	t.playField.AddChild(&mainMenu)
 }
 
 func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph gfx.Glyph, colour, highlight uint32) {

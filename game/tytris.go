@@ -104,11 +104,13 @@ func (t *TyTris) changeState(new_state int) {
 	case GAME_OVER:
 		log.Info("GAME OVER")
 		t.SetInputHandler(t.handleInput_gameover)
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").ToggleVisible()
 		//show game over message and new game button
 	case PLAYING:
 		//if previous state was paused, just hide the pause message and resume
 		//otherwise we're start a new game. do new game setup
 		log.Info("STARTING NEW GAME")
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").ToggleVisible()
 		t.SetInputHandler(t.handleInput_playing)
 		t.new_game()
 	case PAUSED:
@@ -118,6 +120,7 @@ func (t *TyTris) changeState(new_state int) {
 
 		//if previous state was playing, pause game and show pause message, wait for input
 		log.Info("GAME PAUSED")
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").ToggleVisible()
 		t.SetInputHandler(t.handleInput_paused)
 	default:
 		log.Error("Oops, bad state change.")

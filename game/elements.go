@@ -77,3 +77,74 @@ func (upv *UpcomingPieceView) UpdatePieces(pieces []Piece) {
 		x += piece_elements[i].Size().W + 1
 	}
 }
+
+type MainMenu struct {
+	GridArea
+
+	message      ui.Textbox
+	instructions ui.Textbox
+}
+
+func (mm *MainMenu) Init(size vec.Dims) {
+	mm.GridArea.Init(size, vec.ZERO_COORD, ui.BorderDepth)
+	mm.SetLabel("menu")
+	mm.SetDefaultVisuals(gfx.Visuals{
+		Mode:    gfx.DRAW_GLYPH,
+		Colours: col.Pair{col.WHITE, col.NONE},
+	})
+
+	mm.message.Init(vec.Dims{size.W-2, 6}, vec.Coord{1, 2}, 0, "Do you have what it takes to withstand a TORRENT of COLOURFUL SHAPES???", true)
+	mm.message.SetDefaultColours(col.Pair{text_colour, gfx.COL_DEFAULT})
+	mm.instructions.Init(vec.Dims{size.W, 2}, vec.Coord{0, 10}, 0, "PRESS ANY KEY TO BEGIN!", true)
+	mm.instructions.SetDefaultColours(col.Pair{text_colour, gfx.COL_DEFAULT})
+
+	instructions_pulse := gfx.NewPulseAnimation(mm.instructions.DrawableArea(), 0, 60, col.Pair{col.GREEN, col.NONE})
+	instructions_pulse.Repeat = true
+	instructions_pulse.Start()
+	mm.instructions.AddAnimation(&instructions_pulse)
+
+	mm.AddChildren(&mm.message, &mm.instructions)
+
+	controls := ControlsView{}
+	controls.Init(vec.Dims{size.W, 9}, vec.Coord{0, 16}, 0)
+	mm.AddChild(&controls)
+}
+
+type ControlsView struct {
+	ui.ElementPrototype
+}
+
+func (cv *ControlsView) Init(size vec.Dims, pos vec.Coord, depth int) {
+	cv.ElementPrototype.Init(size, pos, depth)
+	cv.SetupBorder("Controls", "")
+	cv.SetDefaultVisuals(gfx.Visuals{
+		Mode:    gfx.DRAW_NONE,
+		Colours: col.Pair{text_colour, background_colour},
+	})
+}
+
+func (cv *ControlsView) Render() {
+	cv.DrawText(vec.Coord{0, 1}, 1, "Move Piece", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 2, 1}, 1, gfx.GLYPH_ARROW_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 1}, 1, gfx.GLYPH_ARROW_RIGHT)
+
+	cv.DrawText(vec.Coord{0, 2}, 1, "Fast Drop (hold) ", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 2}, 1, gfx.GLYPH_ARROW_DOWN)
+
+	cv.DrawText(vec.Coord{0, 3}, 1, "Instant Drop", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 3}, 1, gfx.GLYPH_ARROW_UP)
+
+	cv.DrawText(vec.Coord{0, 4}, 1, "Rotate CW", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 4}, 1, gfx.GLYPH_C)
+
+	cv.DrawText(vec.Coord{0, 5}, 1, "Rotate CCW", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 5}, 1, gfx.GLYPH_Z)
+
+	cv.DrawText(vec.Coord{0, 6}, 1, "Hold/Swap Piece", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 6}, 1, gfx.GLYPH_X)
+
+	cv.DrawText(vec.Coord{0, 7}, 1, "Pause", col.Pair{gfx.COL_DEFAULT, col.NONE}, gfx.DRAW_TEXT_LEFT)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 3, 7}, 1, gfx.GLYPH_E)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 2, 7}, 1, gfx.GLYPH_S)
+	cv.DrawGlyph(vec.Coord{cv.Size().W - 1, 7}, 1, gfx.GLYPH_C)
+}
