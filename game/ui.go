@@ -26,16 +26,17 @@ func (t *TyTris) setupUI() {
 	//logo and subtitle
 	logoImage := ui.Image{}
 	logoImage.Init(vec.Coord{3, 2}, 0, "res/logo.xp")
-	subtitle := ui.NewTextbox(vec.Dims{11, ui.FIT_TEXT}, vec.Coord{4, 9}, 0, "The Fun Game That No One Stole At All!", true)
+	subtitle := ui.NewTextbox(vec.Dims{11, ui.FIT_TEXT}, vec.Coord{4, 9}, 0, "The Fun Game That No One Stole At All", true)
 	subtitle.SetDefaultColours(col.Pair{text_colour, gfx.COL_DEFAULT})
 	t.Window().AddChildren(&logoImage, subtitle)
 
 	//initialize the playfield, where the blocks fall and the matrix is drawn.
-	t.playField.Init(WellDims, vec.Coord{19, 1}, 0)
+	t.playField.Init(well_size, vec.Coord{19, 1}, 0)
 	t.playField.EnableBorder()
 
-	t.matrixView.Init(WellDims, vec.ZERO_COORD, 2)
+	t.matrixView.Init(well_size, vec.ZERO_COORD, 2)
 	t.matrixView.matrix = &t.matrix
+	
 	t.playField.AddChild(&t.matrixView)
 
 	current_piece := PieceElement{}
@@ -50,16 +51,16 @@ func (t *TyTris) setupUI() {
 	ghost_piece.SetLabel("ghost")
 	t.playField.AddChild(&ghost_piece)
 
+	//main menu. this will be a child of the playarea, blocking the view of the matrix and everything else when
+	//visibility is toggled on. we'll also use this as the pause menu, with a change in some text
+	mainMenu := MainMenu{}
+	mainMenu.Init(t.playField.DrawableArea().Dims)	
+	t.playField.AddChild(&mainMenu)
+
 	t.Window().AddChild(&t.playField)
 
 	// upcoming pieces view, where up to the next 6 pieces are displayed in order from left to right
-	t.upcomingArea.Init(vec.Dims{18, 4}, vec.Coord{30, 3}, 0)
-	t.upcomingArea.SetupBorder("Upcoming Pieces", "")
-	for range 6 {
-		upcoming_piece := PieceElement{}
-		upcoming_piece.Init(vec.Dims{3, 2}, vec.Coord{0, 0}, 1)
-		t.upcomingArea.AddChild(&upcoming_piece)
-	}
+	t.upcomingArea.Init(vec.Dims{18, 4}, vec.Coord{30, 3}, 0)	
 
 	// held piece area, where we show which piece the player is holding (if there is one)
 	t.heldArea.Init(vec.Dims{6, 4}, vec.Coord{30, 8}, 0)
@@ -99,22 +100,18 @@ func (t *TyTris) setupUI() {
 	speed.SetLabel("speed")
 	speed.SetDefaultColours(col.Pair{text_colour, col.NONE})
 	infoArea.AddChildren(speedLabel, speed)
-
+	
 	t.Window().AddChild(&infoArea)
 
 	// highscore area
 	highScoreArea := ui.ElementPrototype{}
 	highScoreArea.Init(vec.Dims{12, 13}, vec.Coord{3, 13}, 1)
 	highScoreArea.EnableBorder()
-
 	t.Window().AddChild(&highScoreArea)
 
-	//main menu. this will be a child of the playarea, blocking the view of the matrix and everything else when
-	//visibility is toggled on. we'll also use this as the pause menu, with a change in some text
-	mainMenu := MainMenu{}
-	mainMenu.Init(t.playField.DrawableArea().Dims)
-
-	t.playField.AddChild(&mainMenu)
+	gameover := GameOverScreen{}
+	gameover.Init(t.Window().DrawableArea().Dims.Shrink(14, 14), vec.Coord{7, 7}, 10)
+	t.Window().AddChild(&gameover)
 }
 
 func drawBlock(canvas *gfx.Canvas, block_pos vec.Coord, glyph gfx.Glyph, colour, highlight uint32) {
@@ -127,7 +124,7 @@ func (t *TyTris) UpdateUI() {
 	}
 
 	timer := ui.GetLabelled[*ui.Textbox](t.Window(), "time")
-	timer.ChangeText(strconv.Itoa(t.gameTick / 60))
+	timer.ChangeText(strconv.Itoa(t.info.time / 60))
 
 	speed := ui.GetLabelled[*ui.Textbox](t.Window(), "speed")
 	if t.gravity != gravity_minimum {

@@ -39,6 +39,8 @@ func (t *TyTris) handleInput_playing(event event.Event) (event_handled bool) {
 			case input.K_x:
 				t.swap_held_piece()
 				event_handled = true
+			case input.K_ESCAPE:
+				fireStateChangeEvent(PAUSED)
 			}
 		case input.KEY_RELEASED:
 			if key_event.Direction() == vec.DIR_DOWN {
@@ -88,6 +90,7 @@ func (t *TyTris) dropPiece() {
 
 	t.current_piece.pos = t.ghost_position
 	t.lockPiece()
+	t.info.quick_drops += 1
 }
 
 func (t *TyTris) swap_held_piece() {
@@ -126,34 +129,6 @@ func (t *TyTris) swap_held_piece() {
 	colour := t.held_piece.Colour()
 	t.held_flash.ToColours = col.Pair{colour, colour}
 	t.held_flash.Play()
-}
 
-// input handler for game start state
-func (t *TyTris) handleInput_gamestart(event event.Event) (event_handled bool) {
-	if event.ID() == input.EV_KEYBOARD {
-		fireStateChangeEvent(PLAYING)
-		event_handled = true
-	}
-
-	return
-}
-
-// input handler for game paused state
-func (t *TyTris) handleInput_paused(event event.Event) (event_handled bool) {
-	if event.ID() == input.EV_KEYBOARD {
-		fireStateChangeEvent(PLAYING)
-		event_handled = true
-	}
-
-	return
-}
-
-// input handler for game over state
-func (t *TyTris) handleInput_gameover(event event.Event) (event_handled bool) {
-	if event.ID() == input.EV_KEYBOARD {
-		fireStateChangeEvent(PLAYING)
-		event_handled = true
-	}
-	
-	return
+	t.info.swaps += 1
 }

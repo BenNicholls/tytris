@@ -10,7 +10,7 @@ import (
 
 var LDA_Duration int = 20
 
-var SUA_Sweep_Duration int = (WellDims.H)
+var SUA_Sweep_Duration int = (well_size.H)
 var SUA_Particle_Decay int = 15
 
 type LineDestroyAnimation struct {

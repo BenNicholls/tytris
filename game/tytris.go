@@ -13,16 +13,18 @@ import (
 	"github.com/bennicholls/tyumi/log"
 	"github.com/bennicholls/tyumi/util"
 	"github.com/bennicholls/tyumi/vec"
+	//"github.com/pkg/profile"
 )
 
-var WellDims vec.Dims = vec.Dims{10, 25}
+var well_size vec.Dims = vec.Dims{10, 25}
 var starting_gravity int = 45
 var speed_up_gravity int = 8    //gravity for when the player is holding DOWN
 var acceleration_time int = 300 //speed up every 300 ticks (5 seconds)
 var gravity_minimum int = 5
-var InvalidLines int = 3
+var invalid_lines int = 3
 
 func main() {
+	//defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
 	log.EnableConsoleOutput()
 	engine.InitConsole(vec.Dims{48, 27})
 	engine.SetPlatform(platform_sdl.New())
@@ -45,6 +47,7 @@ func main() {
 
 const (
 	GAME_START int = iota
+	NEW_GAME
 	PLAYING
 	PAUSED
 	GAME_OVER
@@ -70,10 +73,9 @@ type TyTris struct {
 	matrix          []Line
 	upcoming_pieces []Piece
 
-	score            int // HIGHER IS BETTER!!!!!
+	info             GameInfo
 	piece_spawn_tick int
 	gravity          int
-	gameTick         int  // ticks since game was started
 	speed_up         bool // will be true if player is holding down the DOWN key
 	swapped_piece    bool // whether or not a swap has taken place for this piece
 	spawn_next       bool // true if a new piece needs to be spawned
@@ -82,12 +84,9 @@ type TyTris struct {
 func (t *TyTris) setup() {
 	t.Events().AddHandler(t.handle_event)
 	t.Events().Listen(EV_CHANGESTATE)
-	// set the event handler for input events. these are keypresses, mouse movements, etc. the state object
-	// sets the input event stream to listen to input events for us by default
-	t.SetInputHandler(t.handleInput_gamestart)
 
 	// do some game and ui setup
-	t.matrix = make([]Line, WellDims.H)
+	t.matrix = make([]Line, well_size.H)
 	for i := range t.matrix {
 		t.matrix[i].Clear()
 	}
@@ -101,18 +100,24 @@ func (t *TyTris) changeState(new_state int) {
 	}
 
 	switch new_state {
+	case GAME_START:
+		t.cleanupUI()
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").Activate(GAME_START)
 	case GAME_OVER:
 		log.Info("GAME OVER")
-		t.SetInputHandler(t.handleInput_gameover)
-		ui.GetLabelled[*MainMenu](t.Window(), "menu").ToggleVisible()
-		//show game over message and new game button
-	case PLAYING:
-		//if previous state was paused, just hide the pause message and resume
-		//otherwise we're start a new game. do new game setup
+		t.SetInputHandler(nil)
+		ui.GetLabelled[*GameOverScreen](t.Window(), "gameover").Activate(t.info)
+	case NEW_GAME:
 		log.Info("STARTING NEW GAME")
-		ui.GetLabelled[*MainMenu](t.Window(), "menu").ToggleVisible()
-		t.SetInputHandler(t.handleInput_playing)
 		t.new_game()
+		return
+	case PLAYING:
+		if t.state == PAUSED {
+			log.Info("UNPAUSING!")
+		}
+
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").Hide()
+		t.SetInputHandler(t.handleInput_playing)
 	case PAUSED:
 		if t.state != PLAYING {
 			return
@@ -120,8 +125,8 @@ func (t *TyTris) changeState(new_state int) {
 
 		//if previous state was playing, pause game and show pause message, wait for input
 		log.Info("GAME PAUSED")
-		ui.GetLabelled[*MainMenu](t.Window(), "menu").ToggleVisible()
-		t.SetInputHandler(t.handleInput_paused)
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").Activate(PAUSED)
+		t.SetInputHandler(nil)
 	default:
 		log.Error("Oops, bad state change.")
 		return
@@ -131,21 +136,13 @@ func (t *TyTris) changeState(new_state int) {
 }
 
 func (t *TyTris) new_game() {
-	for i := range t.matrix {
-		t.matrix[i].Clear()
-	}
-
-	t.gameTick = 0
-	t.score = 0
-	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText("0")
+	t.info = GameInfo{}
+	
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
-	t.held_piece = Piece{pType: NO_PIECE}
 	t.spawn_next = true
-
-	t.matrixView.Updated = true
-	t.heldArea.Updated = true
-	ui.GetLabelled[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
+	
+	fireStateChangeEvent(PLAYING)
 }
 
 func (t *TyTris) Update() {
@@ -155,7 +152,7 @@ func (t *TyTris) Update() {
 
 	if t.spawn_next {
 		//test for game over
-		for i := range InvalidLines {
+		for i := range invalid_lines {
 			if t.matrix[i].hasBlock() {
 				fireStateChangeEvent(GAME_OVER)
 				return
@@ -178,7 +175,7 @@ func (t *TyTris) Update() {
 		current_gravity = speed_up_gravity
 	}
 
-	if (t.gameTick-t.piece_spawn_tick)%current_gravity == 0 {
+	if (t.info.time-t.piece_spawn_tick)%current_gravity == 0 {
 		if t.testMove(vec.DIR_DOWN) {
 			t.movePiece(vec.DIR_DOWN)
 		} else {
@@ -186,20 +183,37 @@ func (t *TyTris) Update() {
 		}
 	}
 
-	t.gameTick += 1
+	t.info.time += 1
 }
 
 func (t *TyTris) updateScore(lines_destroyed int) {
 	points := lines_destroyed * 10
 	//do more score stuff here????
 
-	t.score += points
+	t.info.score += points
 	score_text := ui.GetLabelled[*ui.Textbox](t.Window(), "score")
-	score_text.ChangeText(strconv.Itoa(t.score))
+	score_text.ChangeText(strconv.Itoa(t.info.score))
 	pulse := gfx.NewPulseAnimation(score_text.DrawableArea(), 0, 12, col.Pair{col.YELLOW, col.NONE})
 	pulse.OneShot = true
 	pulse.Start()
 	score_text.AddAnimation(&pulse)
+}
+
+func (t *TyTris) cleanupUI() {
+	for i := range t.matrix {
+		t.matrix[i].Clear()
+	}
+	t.matrixView.Updated = true
+
+	t.upcomingArea.Reset()
+
+	t.held_piece = Piece{pType: NO_PIECE}
+	ui.GetLabelled[*PieceElement](t.Window(), "held").UpdatePiece(t.held_piece)
+	t.heldArea.Updated = true
+
+	ui.GetLabelled[*ui.Textbox](t.Window(), "score").ChangeText("0")
+	ui.GetLabelled[*ui.Textbox](t.Window(), "time").ChangeText("0")
+	ui.GetLabelled[*ui.Textbox](t.Window(), "speed").ChangeText("0")
 }
 
 func (t *TyTris) testRotate(dir int) (kick vec.Coord, ok bool) {
@@ -233,7 +247,7 @@ func (t *TyTris) testValidPosition(piece Piece) bool {
 		if block {
 			block_pos := piece.pos.Add(vec.IndexToCoord(i, piece.Stride()))
 			//not in well
-			if !block_pos.IsInside(WellDims) {
+			if !block_pos.IsInside(well_size) {
 				return false
 			}
 
@@ -265,17 +279,26 @@ func (t *TyTris) lockPiece() {
 	var destroyed_lines int
 	for i, line := range t.matrix {
 		if line.isFull() {
-			lda := NewLineDestroyAnimation(vec.Rect{vec.Coord{0, i}, vec.Dims{WellDims.W, 1}})
+			lda := NewLineDestroyAnimation(vec.Rect{vec.Coord{0, i}, vec.Dims{well_size.W, 1}})
 			t.playField.AddAnimation(&lda)
 			destroyed_lines += 1
-			//i dunno, do some animations or something??
 		}
 	}
 
 	if destroyed_lines > 0 {
+		t.info.lines_destroyed += destroyed_lines
+		switch destroyed_lines {
+		case 2:
+			t.info.double_kills += 1
+		case 3:
+			t.info.triple_kills += 1
+		case 4:
+			t.info.quad_kills += 1
+		}
 		t.updateScore(destroyed_lines)
 	}
 
+	t.info.pieces_dropped += 1
 	t.spawn_next = true
 }
 
@@ -344,13 +367,13 @@ func (t *TyTris) spawn_piece(piece Piece) {
 
 	//update gravity if necessary
 	old_gravity := t.gravity
-	t.gravity = util.Clamp(starting_gravity-t.gameTick/acceleration_time, gravity_minimum, starting_gravity)
+	t.gravity = util.Clamp(starting_gravity-t.info.time/acceleration_time, gravity_minimum, starting_gravity)
 	if t.gravity != old_gravity {
 		speedup_animation := NewSpeedUpAnimation()
 		t.playField.AddAnimation(&speedup_animation)
 	}
 
-	t.piece_spawn_tick = t.gameTick
+	t.piece_spawn_tick = t.info.time
 }
 
 func (t *TyTris) get_next_piece() Piece {
@@ -391,4 +414,18 @@ func (l Line) hasBlock() bool {
 	}
 
 	return false
+}
+
+type GameInfo struct {
+	score           int
+	time            int
+	pieces_dropped  int
+	quick_drops     int
+	swaps           int
+	lines_destroyed int
+	double_kills    int
+	triple_kills    int
+	quad_kills      int
+
+	high_score bool
 }
