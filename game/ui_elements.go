@@ -109,6 +109,7 @@ func (hsv *HighScoreView) Init(size vec.Dims, pos vec.Coord, depth int) {
 	hsv.ElementPrototype.Init(size, pos, depth)
 
 	hsv.scores.Init(vec.Dims{size.W - 4, size.H - 2}, vec.Coord{2, 2}, 1, "some scores", false)
+	hsv.scores.SetDefaultColours(col.Pair{text_colour, background_colour})
 	hsv.AddChild(&hsv.scores)
 }
 
@@ -119,7 +120,11 @@ func (hsv *HighScoreView) UpdateScores(hs HighScores) {
 		scoreText += fmt.Sprintf("%2d) %-5s %6d/n", i+1, entry.Name, entry.Score)
 	}
 
-	hsv.scores.ChangeText(scoreText)
+	if scoreText != "" {
+		hsv.scores.ChangeText(scoreText)
+	} else {
+		hsv.scores.ChangeText("/n/n/n/nno scores yet???")
+	}
 }
 
 func (hsv *HighScoreView) Render() {

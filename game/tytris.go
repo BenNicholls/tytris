@@ -23,9 +23,10 @@ var acceleration_time int = 300 //speed up every 300 ticks (5 seconds)
 var gravity_minimum int = 5
 var invalid_lines int = 3
 
+var debug bool
+
 func main() {
 	//defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
-	log.EnableConsoleOutput()
 	engine.InitConsole(vec.Dims{48, 27})
 	engine.SetPlatform(platform_sdl.New())
 	engine.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
@@ -39,7 +40,7 @@ func main() {
 	game.Init(vec.Dims{engine.FIT_CONSOLE, engine.FIT_CONSOLE})
 	game.setup()
 	defer game.highScores.WriteToDisk()
-	
+
 	engine.SetInitialMainState(&game)
 	engine.Run()
 
@@ -108,17 +109,17 @@ func (t *TyTris) changeState(new_state int) {
 		t.cleanupUI()
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Activate(GAME_START)
 	case GAME_OVER:
-		log.Info("GAME OVER")
+		log.Debug("GAME OVER")
 		t.SetInputHandler(nil)
 		t.info.high_score = t.highScores.IsHighScore(t.info.score)
+		ui.GetLabelled[*MainMenu](t.Window(), "menu").Hide()
 		ui.GetLabelled[*GameOverScreen](t.Window(), "gameover").Activate(t.info)
 	case NEW_GAME:
-		log.Info("STARTING NEW GAME")
 		t.new_game()
 		return
 	case PLAYING:
 		if t.state == PAUSED {
-			log.Info("UNPAUSING!")
+			log.Debug("UNPAUSING!")
 		}
 
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Hide()
@@ -129,7 +130,7 @@ func (t *TyTris) changeState(new_state int) {
 		}
 
 		//if previous state was playing, pause game and show pause message, wait for input
-		log.Info("GAME PAUSED")
+		log.Debug("GAME PAUSED")
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Activate(PAUSED)
 		t.SetInputHandler(nil)
 	default:
@@ -145,6 +146,7 @@ func (t *TyTris) new_game() {
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
 	t.spawn_next = true
+	t.held_piece.pType = NO_PIECE
 	fireStateChangeEvent(PLAYING)
 }
 

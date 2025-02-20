@@ -26,7 +26,7 @@ func (t *TyTris) setupUI() {
 	//logo and subtitle
 	logoImage := ui.Image{}
 	logoImage.Init(vec.Coord{3, 2}, 0, "res/logo.xp")
-	subtitle := ui.NewTextbox(vec.Dims{11, ui.FIT_TEXT}, vec.Coord{4, 9}, 0, "The Fun Game That No One Stole At All", true)
+	subtitle := ui.NewTextbox(vec.Dims{10, ui.FIT_TEXT}, vec.Coord{4, 9}, 0, "The Fun Game That No One Stole At All", true)
 	subtitle.SetDefaultColours(col.Pair{text_colour, gfx.COL_DEFAULT})
 	t.Window().AddChildren(&logoImage, subtitle)
 
