@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
@@ -95,4 +97,31 @@ func (upv *UpcomingPieceView) Reset() {
 	for i := range piece_elements {
 		piece_elements[i].(*PieceElement).UpdatePiece(Piece{pType: NO_PIECE})
 	}
+}
+
+type HighScoreView struct {
+	ui.ElementPrototype
+
+	scores ui.Textbox
+}
+
+func (hsv *HighScoreView) Init(size vec.Dims, pos vec.Coord, depth int) {
+	hsv.ElementPrototype.Init(size, pos, depth)
+
+	hsv.scores.Init(vec.Dims{size.W - 4, size.H - 2}, vec.Coord{2, 2}, 1, "some scores", false)
+	hsv.AddChild(&hsv.scores)
+}
+
+func (hsv *HighScoreView) UpdateScores(hs HighScores) {
+	scoreText := ""
+
+	for i, entry := range hs.Scores {
+		scoreText += fmt.Sprintf("%2d) %-5s %6d/n", i+1, entry.Name, entry.Score)
+	}
+
+	hsv.scores.ChangeText(scoreText)
+}
+
+func (hsv *HighScoreView) Render() {
+	hsv.DrawFullText(vec.Coord{0, 0}, 0, "HIGH SCORES!", col.Pair{text_colour, background_colour})
 }

@@ -13,10 +13,11 @@ import (
 type GameOverScreen struct {
 	ui.ElementPrototype
 
-	stats ui.Textbox
-
+	statsBox   ui.Textbox
 	message    ui.Textbox
 	name_input ui.InputBox
+
+	info GameInfo
 }
 
 func (gos *GameOverScreen) Init(size vec.Dims, pos vec.Coord, depth int) {
@@ -32,10 +33,10 @@ func (gos *GameOverScreen) Init(size vec.Dims, pos vec.Coord, depth int) {
 	gos.name_input.SetDefaultColours(col.Pair{background_colour, border_colour})
 	gos.AddChildren(&gos.message, &gos.name_input)
 
-	gos.stats.Init(vec.Dims{10, size.H}, vec.Coord{size.W - 10, 0}, ui.BorderDepth, "", false)
-	gos.stats.SetupBorder("S T A T S", "")
-	gos.stats.SetDefaultColours(col.Pair{text_colour, background_colour})
-	gos.AddChild(&gos.stats)
+	gos.statsBox.Init(vec.Dims{10, size.H}, vec.Coord{size.W - 10, 0}, ui.BorderDepth, "", false)
+	gos.statsBox.SetupBorder("S T A T S", "")
+	gos.statsBox.SetDefaultColours(col.Pair{text_colour, background_colour})
+	gos.AddChild(&gos.statsBox)
 
 	gos.SetLabel("gameover")
 	gos.Hide()
@@ -59,7 +60,7 @@ func (gos *GameOverScreen) Activate(info GameInfo) {
 		Triple Kills  %6d/n
 		QUAD Kills    %6d/n`, info.score, info.time/60, info.pieces_dropped, info.quick_drops, info.swaps, info.lines_destroyed, info.double_kills, info.triple_kills, info.quad_kills)
 
-	gos.stats.ChangeText(stats)
+	gos.statsBox.ChangeText(stats)
 
 	if info.high_score {
 		gos.message.ChangeText("Huzzah, you got a highscore! Enter your name and be remembered for eternity!")
@@ -69,6 +70,7 @@ func (gos *GameOverScreen) Activate(info GameInfo) {
 		gos.name_input.Hide()
 	}
 
+	gos.info = info
 	gos.Show()
 }
 
@@ -79,8 +81,7 @@ func (gos *GameOverScreen) HandleKeypress(key_event *input.KeyboardEvent) (event
 
 	if gos.name_input.IsVisible() {
 		if key_event.Key == input.K_RETURN {
-			//record high score
-			//refresh high score view
+			fireHighScoreEvent(gos.name_input.InputtedText(), gos.info.score)
 			gos.Hide()
 			fireStateChangeEvent(GAME_START)
 			event_handled = true

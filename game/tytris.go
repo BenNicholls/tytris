@@ -38,8 +38,9 @@ func main() {
 	game := TyTris{}
 	game.Init(vec.Dims{engine.FIT_CONSOLE, engine.FIT_CONSOLE})
 	game.setup()
+	defer game.highScores.WriteToDisk()
+	
 	engine.SetInitialMainState(&game)
-
 	engine.Run()
 
 	return
@@ -59,10 +60,11 @@ type TyTris struct {
 	state int // one of the constants above
 
 	//ui elements
-	playField    PlayField
-	matrixView   MatrixView
-	upcomingArea UpcomingPieceView
-	heldArea     GridArea
+	playField     PlayField
+	matrixView    MatrixView
+	upcomingArea  UpcomingPieceView
+	heldArea      GridArea
+	highScoreArea HighScoreView
 
 	//animations
 	held_flash gfx.FlashAnimation
@@ -72,6 +74,7 @@ type TyTris struct {
 	ghost_position  vec.Coord
 	matrix          []Line
 	upcoming_pieces []Piece
+	highScores      HighScores
 
 	info             GameInfo
 	piece_spawn_tick int
@@ -83,7 +86,7 @@ type TyTris struct {
 
 func (t *TyTris) setup() {
 	t.Events().AddHandler(t.handle_event)
-	t.Events().Listen(EV_CHANGESTATE)
+	t.Events().Listen(EV_CHANGESTATE, EV_HIGHSCORE)
 
 	// do some game and ui setup
 	t.matrix = make([]Line, well_size.H)
@@ -91,6 +94,7 @@ func (t *TyTris) setup() {
 		t.matrix[i].Clear()
 	}
 
+	t.highScores.LoadFromDisk()
 	t.setupUI()
 }
 
@@ -106,6 +110,7 @@ func (t *TyTris) changeState(new_state int) {
 	case GAME_OVER:
 		log.Info("GAME OVER")
 		t.SetInputHandler(nil)
+		t.info.high_score = t.highScores.IsHighScore(t.info.score)
 		ui.GetLabelled[*GameOverScreen](t.Window(), "gameover").Activate(t.info)
 	case NEW_GAME:
 		log.Info("STARTING NEW GAME")
@@ -137,11 +142,9 @@ func (t *TyTris) changeState(new_state int) {
 
 func (t *TyTris) new_game() {
 	t.info = GameInfo{}
-	
 	t.shuffle_pieces()
 	t.gravity = starting_gravity
 	t.spawn_next = true
-	
 	fireStateChangeEvent(PLAYING)
 }
 

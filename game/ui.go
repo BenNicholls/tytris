@@ -104,10 +104,10 @@ func (t *TyTris) setupUI() {
 	t.Window().AddChild(&infoArea)
 
 	// highscore area
-	highScoreArea := ui.ElementPrototype{}
-	highScoreArea.Init(vec.Dims{12, 13}, vec.Coord{3, 13}, 1)
-	highScoreArea.EnableBorder()
-	t.Window().AddChild(&highScoreArea)
+	t.highScoreArea.Init(vec.Dims{12, 13}, vec.Coord{3, 13}, 1)
+	t.highScoreArea.EnableBorder()
+	t.highScoreArea.UpdateScores(t.highScores)
+	t.Window().AddChild(&t.highScoreArea)
 
 	gameover := GameOverScreen{}
 	gameover.Init(t.Window().DrawableArea().Dims.Shrink(14, 14), vec.Coord{7, 7}, 10)
