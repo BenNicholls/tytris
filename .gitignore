@@ -1,8 +1,7 @@
-*.sh
-go.work*
+.vscode/
 *.txt
 *.dll
 *.exe
-.vscode/
-tytris
+*.zip
+go.work*
 high.scores
