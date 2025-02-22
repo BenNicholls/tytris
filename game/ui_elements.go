@@ -10,7 +10,7 @@ import (
 )
 
 type GridArea struct {
-	ui.ElementPrototype
+	ui.Element
 }
 
 func (ga *GridArea) Render() {
@@ -40,7 +40,7 @@ func (pf *PlayField) Render() {
 }
 
 type MatrixView struct {
-	ui.ElementPrototype
+	ui.Element
 
 	matrix *[]Line
 }
@@ -100,13 +100,13 @@ func (upv *UpcomingPieceView) Reset() {
 }
 
 type HighScoreView struct {
-	ui.ElementPrototype
+	ui.Element
 
 	scores ui.Textbox
 }
 
 func (hsv *HighScoreView) Init(size vec.Dims, pos vec.Coord, depth int) {
-	hsv.ElementPrototype.Init(size, pos, depth)
+	hsv.Element.Init(size, pos, depth)
 
 	hsv.scores.Init(vec.Dims{size.W - 4, size.H - 2}, vec.Coord{2, 2}, 1, "some scores", false)
 	hsv.scores.SetDefaultColours(col.Pair{text_colour, background_colour})

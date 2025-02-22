@@ -11,7 +11,7 @@ import (
 )
 
 type GameOverScreen struct {
-	ui.ElementPrototype
+	ui.Element
 
 	statsBox   ui.Textbox
 	message    ui.Textbox
@@ -21,7 +21,7 @@ type GameOverScreen struct {
 }
 
 func (gos *GameOverScreen) Init(size vec.Dims, pos vec.Coord, depth int) {
-	gos.ElementPrototype.Init(size, pos, depth)
+	gos.Element.Init(size, pos, depth)
 	gos.EnableBorder()
 
 	gameOverImage := ui.Image{}

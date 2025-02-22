@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bennicholls/tyumi/engine"
+	"github.com/bennicholls/tyumi"
 	"github.com/bennicholls/tyumi/event"
 	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
@@ -108,7 +108,7 @@ func (mm *MainMenu) HandleKeypress(key_event *input.KeyboardEvent) (event_handle
 				mm.about_text.Show()
 				event_handled = true
 			case 2: //quit
-				event.Fire(event.New(engine.EV_QUIT))
+				event.Fire(event.New(tyumi.EV_QUIT))
 				event_handled = true
 			}
 		} else if mm.pause_menu.IsVisible() {
@@ -120,7 +120,7 @@ func (mm *MainMenu) HandleKeypress(key_event *input.KeyboardEvent) (event_handle
 				fireStateChangeEvent(GAME_OVER)
 				event_handled = true
 			case 2: //quit
-				event.Fire(event.New(engine.EV_QUIT))
+				event.Fire(event.New(tyumi.EV_QUIT))
 				event_handled = true
 			}
 		}
@@ -130,11 +130,11 @@ func (mm *MainMenu) HandleKeypress(key_event *input.KeyboardEvent) (event_handle
 }
 
 type ControlsView struct {
-	ui.ElementPrototype
+	ui.Element
 }
 
 func (cv *ControlsView) Init(size vec.Dims, pos vec.Coord, depth int) {
-	cv.ElementPrototype.Init(size, pos, depth)
+	cv.Element.Init(size, pos, depth)
 	cv.SetupBorder("Controls", "")
 	cv.SetDefaultVisuals(gfx.Visuals{
 		Mode:    gfx.DRAW_NONE,

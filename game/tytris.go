@@ -5,12 +5,12 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/bennicholls/tyumi/engine"
-	"github.com/bennicholls/tyumi/engine/platform_sdl"
+	"github.com/bennicholls/tyumi"
 	"github.com/bennicholls/tyumi/gfx"
 	"github.com/bennicholls/tyumi/gfx/col"
 	"github.com/bennicholls/tyumi/gfx/ui"
 	"github.com/bennicholls/tyumi/log"
+	"github.com/bennicholls/tyumi/platform/sdl"
 	"github.com/bennicholls/tyumi/util"
 	"github.com/bennicholls/tyumi/vec"
 	//"github.com/pkg/profile"
@@ -27,9 +27,9 @@ var debug bool
 
 func main() {
 	//defer profile.Start(profile.CPUProfile, profile.ProfilePath(".")).Stop()
-	engine.InitConsole(vec.Dims{48, 27})
-	engine.SetPlatform(platform_sdl.New())
-	engine.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
+	tyumi.InitConsole(vec.Dims{48, 27})
+	tyumi.SetPlatform(sdl.New())
+	tyumi.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
 
 	ui.SetDefaultElementVisuals(gfx.Visuals{
 		Mode:    gfx.DRAW_GLYPH,
@@ -37,12 +37,12 @@ func main() {
 	})
 
 	game := TyTris{}
-	game.Init(vec.Dims{engine.FIT_CONSOLE, engine.FIT_CONSOLE})
+	game.Init(vec.Dims{tyumi.FIT_CONSOLE, tyumi.FIT_CONSOLE})
 	game.setup()
 	defer game.highScores.WriteToDisk()
 
-	engine.SetInitialMainState(&game)
-	engine.Run()
+	tyumi.SetInitialMainState(&game)
+	tyumi.Run()
 
 	return
 }
@@ -56,7 +56,7 @@ const (
 )
 
 type TyTris struct {
-	engine.StatePrototype
+	tyumi.State
 
 	state int // one of the constants above
 

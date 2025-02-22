@@ -8,14 +8,14 @@ import (
 )
 
 type PieceElement struct {
-	ui.ElementPrototype
+	ui.Element
 
 	piece Piece
 	ghost bool
 }
 
 func (pe *PieceElement) Init(size vec.Dims, pos vec.Coord, depth int) {
-	pe.ElementPrototype.Init(size, pos, depth)
+	pe.Element.Init(size, pos, depth)
 	pe.SetDefaultVisuals(gfx.Visuals{
 		Mode:    gfx.DRAW_NONE,
 		Colours: col.Pair{col.WHITE, col.FUSCHIA},

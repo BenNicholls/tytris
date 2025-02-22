@@ -36,7 +36,7 @@ func (t *TyTris) setupUI() {
 
 	t.matrixView.Init(well_size, vec.ZERO_COORD, 2)
 	t.matrixView.matrix = &t.matrix
-	
+
 	t.playField.AddChild(&t.matrixView)
 
 	current_piece := PieceElement{}
@@ -54,13 +54,13 @@ func (t *TyTris) setupUI() {
 	//main menu. this will be a child of the playarea, blocking the view of the matrix and everything else when
 	//visibility is toggled on. we'll also use this as the pause menu, with a change in some text
 	mainMenu := MainMenu{}
-	mainMenu.Init(t.playField.DrawableArea().Dims)	
+	mainMenu.Init(t.playField.DrawableArea().Dims)
 	t.playField.AddChild(&mainMenu)
 
 	t.Window().AddChild(&t.playField)
 
 	// upcoming pieces view, where up to the next 6 pieces are displayed in order from left to right
-	t.upcomingArea.Init(vec.Dims{18, 4}, vec.Coord{30, 3}, 0)	
+	t.upcomingArea.Init(vec.Dims{18, 4}, vec.Coord{30, 3}, 0)
 
 	// held piece area, where we show which piece the player is holding (if there is one)
 	t.heldArea.Init(vec.Dims{6, 4}, vec.Coord{30, 8}, 0)
@@ -76,7 +76,7 @@ func (t *TyTris) setupUI() {
 	t.Window().AddChildren(&t.upcomingArea, &t.heldArea)
 
 	// info area, where we show the player's score, as well as the timer and current game speed
-	infoArea := ui.ElementPrototype{}
+	infoArea := ui.Element{}
 	infoArea.Init(vec.Dims{14, 6}, vec.Coord{32, 19}, 1)
 	infoArea.EnableBorder()
 
@@ -100,7 +100,7 @@ func (t *TyTris) setupUI() {
 	speed.SetLabel("speed")
 	speed.SetDefaultColours(col.Pair{text_colour, col.NONE})
 	infoArea.AddChildren(speedLabel, speed)
-	
+
 	t.Window().AddChild(&infoArea)
 
 	// highscore area
