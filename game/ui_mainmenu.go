@@ -88,6 +88,7 @@ func (mm *MainMenu) Activate(state int) {
 		mm.pause_message.Show()
 		mm.pause_menu.Show()
 		mm.new_game_menu.Hide()
+		sounds.Play("swap")
 	default:
 		return
 	}
@@ -109,9 +110,11 @@ func (mm *MainMenu) HandleKeypress(key_event *input.KeyboardEvent) (event_handle
 			switch mm.new_game_menu.GetSelectionIndex() {
 			case 0: // New Game
 				fireStateChangeEvent(NEW_GAME)
+				sounds.Play("enter")
 				event_handled = true
 			case 1: // About
 				mm.about_text.Show()
+				sounds.Play("enter")
 				event_handled = true
 			case 2: //quit
 				event.Fire(event.New(tyumi.EV_QUIT))
@@ -121,6 +124,7 @@ func (mm *MainMenu) HandleKeypress(key_event *input.KeyboardEvent) (event_handle
 			switch mm.pause_menu.GetSelectionIndex() {
 			case 0: // Resume
 				fireStateChangeEvent(PLAYING)
+				sounds.Play("enter")
 				event_handled = true
 			case 1: // Give Up
 				fireStateChangeEvent(GAME_OVER)

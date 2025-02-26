@@ -32,7 +32,7 @@ func (gos *GameOverScreen) Init(size vec.Dims, pos vec.Coord, depth int) {
 	gos.name_input.Init(vec.Dims{3, 1}, vec.Coord{10, 11}, 1, 5)
 	gos.name_input.SetDefaultColours(col.Pair{background_colour, border_colour})
 	gos.name_input.OnTextChanged = func() {
-		sounds.Play("type")
+		sounds.PlayRandom("type", "type2")
 	}
 
 	gos.AddChildren(&gos.message, &gos.name_input)

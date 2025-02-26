@@ -112,6 +112,7 @@ func (t *TyTris) setup() {
 	sounds.Get("kill").SetVolume(38)
 	sounds.Get("drop").SetVolume(68)
 	sounds.Get("lock").SetVolume(43)
+	sounds.Get("enter").SetVolume(20)
 
 	//load and configure music!
 	playingMusic = tyumi.LoadMusic("res/tytris-theme.wav")
