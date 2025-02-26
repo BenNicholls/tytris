@@ -46,6 +46,9 @@ func (mm *MainMenu) Init(size vec.Dims) {
 		ui.NewTextbox(vec.Dims{6, 1}, vec.ZERO_COORD, 1, "About", true),
 		ui.NewTextbox(vec.Dims{6, 1}, vec.ZERO_COORD, 1, "Quit", true),
 	)
+	mm.new_game_menu.OnChangeSelection = func() {
+		sounds.Play("move")
+	}
 
 	mm.pause_menu.Init(vec.Dims{6, 5}, vec.Coord{2, 5}, 1)
 	mm.pause_menu.ToggleHighlight()
@@ -56,6 +59,9 @@ func (mm *MainMenu) Init(size vec.Dims) {
 		ui.NewTextbox(vec.Dims{6, 1}, vec.ZERO_COORD, 1, "Give Up", true),
 		ui.NewTextbox(vec.Dims{6, 1}, vec.ZERO_COORD, 1, "Quit", true),
 	)
+	mm.pause_menu.OnChangeSelection = func() {
+		sounds.Play("move")
+	}
 
 	mm.AddChildren(&mm.new_game_menu, &mm.pause_menu)
 

@@ -67,6 +67,8 @@ func (t *TyTris) rotatePiece(dir int) {
 	t.current_piece.pos.Move(kick.X, kick.Y)
 	t.updateGhost()
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+
+	sounds.Play("rotate")
 }
 
 func (t *TyTris) movePiece(dir vec.Direction) {
@@ -81,6 +83,9 @@ func (t *TyTris) movePiece(dir vec.Direction) {
 	t.current_piece.pos.Move(dir.X, dir.Y)
 	t.updateGhost()
 	ui.GetLabelled[*PieceElement](t.Window(), "current piece").UpdatePiece(t.current_piece)
+	if dir != vec.DIR_DOWN {
+		sounds.Play("move")
+	}
 }
 
 func (t *TyTris) dropPiece() {
@@ -89,6 +94,7 @@ func (t *TyTris) dropPiece() {
 	}
 
 	t.current_piece.pos = t.ghost_position
+	t.dropped_piece = true
 	t.lockPiece()
 	t.info.quick_drops += 1
 }
@@ -129,6 +135,7 @@ func (t *TyTris) swap_held_piece() {
 	colour := t.held_piece.Colour()
 	t.held_flash.ToColours = col.Pair{colour, colour}
 	t.held_flash.Play()
+	sounds.Play("swap")
 
 	t.info.swaps += 1
 }

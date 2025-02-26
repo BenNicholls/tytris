@@ -23,6 +23,11 @@ var acceleration_time int = 300 //speed up every 300 ticks (5 seconds)
 var gravity_minimum int = 5
 var invalid_lines int = 3
 
+var sounds tyumi.SoundLibrary
+var menuMusic tyumi.AudioResource
+var playingMusic tyumi.AudioResource
+var gameOverMusic tyumi.AudioResource
+
 var debug bool
 
 func main() {
@@ -82,6 +87,7 @@ type TyTris struct {
 	gravity          int
 	speed_up         bool // will be true if player is holding down the DOWN key
 	swapped_piece    bool // whether or not a swap has taken place for this piece
+	dropped_piece    bool // true if player is doing a hard drop
 	spawn_next       bool // true if a new piece needs to be spawned
 }
 
@@ -95,7 +101,26 @@ func (t *TyTris) setup() {
 		t.matrix[i].Clear()
 	}
 
+	//load high scores! (if they exist)
 	t.highScores.LoadFromDisk()
+
+	//load and configure sounds!
+	sounds = tyumi.LoadSoundLibrary("res/sounds/")
+	sounds.Get("speedup").SetChannel(1)
+	sounds.Get("speedup").SetVolume(62)
+	sounds.Get("rotate").SetChannel(2)
+	sounds.Get("kill").SetVolume(38)
+	sounds.Get("drop").SetVolume(68)
+	sounds.Get("lock").SetVolume(43)
+
+	//load and configure music!
+	playingMusic = tyumi.LoadMusic("res/tytris-theme.wav")
+	playingMusic.Looping = true
+	menuMusic = tyumi.LoadMusic("res/tytris-menu.wav")
+	menuMusic.Looping = true
+	gameOverMusic = tyumi.LoadMusic("res/tytris-sad.wav")
+	tyumi.PlayMusic(menuMusic)
+
 	t.setupUI()
 }
 
@@ -108,9 +133,11 @@ func (t *TyTris) changeState(new_state int) {
 	case GAME_START:
 		t.cleanupUI()
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Activate(GAME_START)
+		tyumi.PlayMusic(menuMusic)
 	case GAME_OVER:
 		log.Debug("GAME OVER")
 		t.SetInputHandler(nil)
+		tyumi.PlayMusic(gameOverMusic)
 		t.info.high_score = t.highScores.IsHighScore(t.info.score)
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Hide()
 		ui.GetLabelled[*GameOverScreen](t.Window(), "gameover").Activate(t.info)
@@ -120,6 +147,9 @@ func (t *TyTris) changeState(new_state int) {
 	case PLAYING:
 		if t.state == PAUSED {
 			log.Debug("UNPAUSING!")
+			tyumi.ResumeMusic()
+		} else {
+			tyumi.PlayMusic(playingMusic)
 		}
 
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Hide()
@@ -131,6 +161,7 @@ func (t *TyTris) changeState(new_state int) {
 
 		//if previous state was playing, pause game and show pause message, wait for input
 		log.Debug("GAME PAUSED")
+		tyumi.PauseMusic()
 		ui.GetLabelled[*MainMenu](t.Window(), "menu").Activate(PAUSED)
 		t.SetInputHandler(nil)
 	default:
@@ -301,6 +332,15 @@ func (t *TyTris) lockPiece() {
 			t.info.quad_kills += 1
 		}
 		t.updateScore(destroyed_lines)
+
+		sounds.Play("kill")
+	} else {
+		if t.dropped_piece {
+			sounds.Play("drop")
+			t.dropped_piece = false
+		} else {
+			sounds.Play("lock")
+		}
 	}
 
 	t.info.pieces_dropped += 1
@@ -376,6 +416,7 @@ func (t *TyTris) spawn_piece(piece Piece) {
 	if t.gravity != old_gravity {
 		speedup_animation := NewSpeedUpAnimation()
 		t.playField.AddAnimation(&speedup_animation)
+		sounds.Play("speedup")
 	}
 
 	t.piece_spawn_tick = t.info.time
