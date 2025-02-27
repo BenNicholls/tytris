@@ -35,7 +35,8 @@ func main() {
 	tyumi.InitConsole(vec.Dims{48, 27})
 	tyumi.SetPlatform(sdl.New())
 	tyumi.SetupRenderer("res/tytris-glyphs24x24.bmp", "res/font12x24.bmp", "TyTris")
-
+	tyumi.EnableAudio()
+	
 	ui.SetDefaultElementVisuals(gfx.Visuals{
 		Mode:    gfx.DRAW_GLYPH,
 		Colours: col.Pair{border_colour, background_colour},
