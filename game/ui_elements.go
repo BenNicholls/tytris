@@ -128,5 +128,5 @@ func (hsv *HighScoreView) UpdateScores(hs HighScores) {
 }
 
 func (hsv *HighScoreView) Render() {
-	hsv.DrawFullText(vec.Coord{0, 0}, 0, "HIGH SCORES!", col.Pair{text_colour, background_colour})
+	hsv.DrawFullWidthText(vec.Coord{0, 0}, 0, "HIGH SCORES!", col.Pair{text_colour, background_colour})
 }
